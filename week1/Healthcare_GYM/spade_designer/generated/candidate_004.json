@@ -1,0 +1,187 @@
+{
+  "id": "spade_clinical_urgent_upper_gi_bleed_p006",
+  "description": {
+    "purpose": "Perform a structured, multi-step assessment and management plan for an elderly patient with acute upper gastrointestinal hemorrhage, balancing immediate resuscitation/transfusion needs with cardiology concerns about antiplatelet therapy after prior coronary stent, and coordinating urgent endoscopic hemostasis and blood-bank support.",
+    "difficulty": "hard",
+    "key_challenges": [
+      "Integrate hemodynamics and existing labs (Hgb 7.2 g/dL, Hct 21.8%, BUN 42 mg/dL, lactate 3.2 mmol/L, Type & Screen A negative) to decide transfusion thresholds and further resuscitation",
+      "Coordinate time-critical interventions: urgent EGD scheduling with GI, blood product crossmatch/availability with blood bank, and determine ICU vs ward disposition",
+      "Weigh risks of holding versus continuing aspirin in a patient with prior coronary stent and active major bleeding; involve cardiology for individualized timing of antiplatelet resumption",
+      "Order and interpret appropriate monitoring tests (serial Hgb/Hct, ECG for ischemia given CAD) without assuming immediate availability of newly ordered results",
+      "Apply guideline-based transfusion thresholds and PPI/endoscopic timing while documenting a clear plan for escalation if endoscopy fails"
+    ]
+  },
+  "user_scenario": {
+    "persona": "Emergency medicine attending coordinating care for an elderly patient with brisk upper GI bleeding",
+    "instructions": "You are the attending responsible for Dorothy Patterson (P006), who presented with hematemesis and melena and is hemodynamically significant. Use Healthcare_GYM tools to: review chart, vitals, and labs; interpret risk scores and high-risk features; decide transfusion strategy and target hemoglobin given her CAD and ongoing bleeding; order urgent tests and blood-bank actions required for endoscopy; coordinate GI and cardiology consultations about timing of endoscopy and antiplatelet management; determine disposition (ICU vs floor) and document the working diagnosis and immediate plan. Do NOT assume results of newly ordered labs will already be available."
+  },
+  "ticket": "Patient P006 (Dorothy Patterson, 72F) with acute hematemesis and melena, hypotension and tachycardia on arrival, Hgb 7.2 g/dL, Hct 21.8%, BUN 42, lactate 3.2, INR 1.0, Type & Screen: A negative. GI consulted for urgent EGD and 2 units pRBC transfused already per note. Needs comprehensive plan: decide transfusion thresholds and additional blood product needs, request urgent endoscopy coordination with blood bank, evaluate need for ICU admission, and consult cardiology regarding withholding/resuming aspirin given prior coronary stent.",
+  "evaluation_criteria": {
+    "actions": [
+      {
+        "action_id": "review_patient",
+        "name": "get_patient_info",
+        "arguments": {
+          "patient_id": "P006"
+        },
+        "info": "Review demographics, allergies, active medications (aspirin, naproxen, omeprazole), past medical history (CAD with prior stent, HTN, OA), and admission note describing GI bleed and initial resuscitation"
+      },
+      {
+        "action_id": "check_vitals",
+        "name": "get_vital_signs",
+        "arguments": {
+          "patient_id": "P006"
+        },
+        "info": "Obtain current and trend vital signs to assess ongoing hemodynamic stability (blood pressure, heart rate, orthostatic changes, temperature, RR, SpO2)"
+      },
+      {
+        "action_id": "review_labs",
+        "name": "get_lab_results",
+        "arguments": {
+          "patient_id": "P006"
+        },
+        "info": "Review existing lab results (Hgb/Hct, BUN/Cr, INR, lactate, Type & Screen) and note which are critical for risk stratification and transfusion planning"
+      },
+      {
+        "action_id": "generate_differential",
+        "name": "get_differential_diagnosis",
+        "arguments": {
+          "symptoms": "hematemesis, melena, hypotension"
+        },
+        "info": "Generate differential for upper GI bleeding (peptic ulcer disease, erosive gastritis from NSAID use, variceal bleeding less likely without liver disease, Mallory-Weiss) to guide endoscopic urgency and expected interventions"
+      },
+      {
+        "action_id": "guidelines",
+        "name": "search_clinical_guidelines",
+        "arguments": {
+          "condition": "Upper gastrointestinal bleeding: transfusion thresholds, PPI therapy, timing of endoscopy, and antiplatelet management with coronary stents"
+        },
+        "info": "Retrieve guideline recommendations to inform transfusion threshold (restrictive vs liberal), PPI and endoscopy timing, and cardiology guidance for antiplatelet therapy in active bleeding"
+      },
+      {
+        "action_id": "order_repeat_hgb",
+        "name": "order_lab_test",
+        "arguments": {
+          "patient_id": "P006",
+          "test_name": "Hemoglobin and Hematocrit (stat repeat; serial q4-6h or more frequent per protocol)",
+          "priority": "stat"
+        },
+        "compare_args": [
+          "patient_id",
+          "test_name",
+          "priority"
+        ],
+        "info": "Order immediate repeat Hgb/Hct to assess response to transfusion and ongoing blood loss (note: result may not be immediately available)"
+      },
+      {
+        "action_id": "order_type_cross",
+        "name": "order_lab_test",
+        "arguments": {
+          "patient_id": "P006",
+          "test_name": "Type and Crossmatch for 2-4 units PRBC (stat) and prepare for additional units",
+          "priority": "stat"
+        },
+        "compare_args": [
+          "patient_id",
+          "test_name",
+          "priority"
+        ],
+        "info": "Ensure blood bank prepares crossmatched units given ongoing/transiently severe bleeding despite an existing Type & Screen result"
+      },
+      {
+        "action_id": "order_ecg",
+        "name": "order_lab_test",
+        "arguments": {
+          "patient_id": "P006",
+          "test_name": "Electrocardiogram (ECG)",
+          "priority": "stat"
+        },
+        "compare_args": [
+          "patient_id",
+          "test_name",
+          "priority"
+        ],
+        "info": "Obtain ECG to evaluate for ischemia or arrhythmia risk prior to/while transfusing given history of CAD and recent hypotension"
+      },
+      {
+        "action_id": "coordinate_gi",
+        "name": "transfer_to_specialist",
+        "arguments": {
+          "summary": "72F with active upper GI bleeding, Hgb 7.2 after initial resuscitation, receiving IV PPI drip; recommend urgent endoscopy for diagnosis and hemostasis. Require endoscopy team readiness, blood product availability at bedside, and plan for repeat Hgb post-transfusion. Please advise on timing (immediate vs after stabilization) and expected endoscopic interventions.",
+          "specialty": "gastroenterology"
+        },
+        "compare_args": [
+          "specialty"
+        ],
+        "info": "Request urgent GI involvement to perform EGD and coordinate timing with resuscitation and blood-bank preparedness"
+      },
+      {
+        "action_id": "consult_cardio",
+        "name": "transfer_to_specialist",
+        "arguments": {
+          "summary": "Patient has prior coronary stent (2020) on chronic aspirin. Currently holding aspirin per admission note due to bleeding. Please advise on ischemic risk vs bleeding risk and timing for safe resumption of antiplatelet therapy after endoscopic hemostasis.",
+          "specialty": "cardiology"
+        },
+        "compare_args": [
+          "specialty"
+        ],
+        "info": "Obtain cardiology input to balance antiplatelet interruption duration against stent/ischemic risk"
+      },
+      {
+        "action_id": "notify_bloodbank",
+        "name": "transfer_to_specialist",
+        "arguments": {
+          "summary": "Urgent: Active upper GI bleed with initial transfusion given and Hgb 7.2; request rapid availability of 2-4 units PRBC crossmatched at bedside and readiness for additional products (platelets/FFP) if needed. Type & Screen in chart: 'A negative, antibody screen negative'.",
+          "specialty": "blood bank/transfusion service"
+        },
+        "compare_args": [
+          "specialty"
+        ],
+        "info": "Coordinate blood product preparation and rapid bedside delivery to align with timing of endoscopy"
+      },
+      {
+        "action_id": "decide_disposition",
+        "name": "transfer_to_specialist",
+        "arguments": {
+          "summary": "Recommend ICU admission for ongoing hemodynamic monitoring and frequent Hgb checks if ongoing bleeding, evidence of hemodynamic instability, or need for repeated transfusion; if stable after endoscopy and no further bleeding, consider step-down unit. Patient currently tachycardic and hypotensive on arrival with ongoing transfusion needs.",
+          "specialty": "critical care"
+        },
+        "compare_args": [
+          "specialty"
+        ],
+        "info": "Request critical care support and potential ICU bed for monitoring and rapid escalation"
+      },
+      {
+        "action_id": "record_dx",
+        "name": "record_diagnosis",
+        "arguments": {
+          "patient_id": "P006",
+          "diagnosis": "Acute upper gastrointestinal hemorrhage (likely peptic ulcer / NSAID-related erosive gastritis)",
+          "icd10_code": "K92.0",
+          "confidence": "high"
+        },
+        "compare_args": [
+          "patient_id",
+          "diagnosis"
+        ],
+        "info": "Document working diagnosis and likely etiologies to guide urgent endoscopic planning"
+      }
+    ],
+    "nl_assertions": [
+      "The agent reviewed Dorothy Patterson's chart and identified high-risk features for major upper GI bleeding: Hgb 7.2 g/dL, Hct 21.8%, tachycardia and hypotension on arrival, elevated BUN 42 mg/dL, and lactate 3.2 mmol/L",
+      "The agent noted current medications (daily aspirin and naproxen) and that aspirin and naproxen were held per admission note; the agent recognized NSAID use as a likely precipitant and that aspirin poses a balance of bleeding vs ischemic risk given prior coronary stent",
+      "The agent found an available Type & Screen result ('A negative, antibody screen negative') and instructed blood bank to crossmatch and prepare 2–4 units PRBC stat given ongoing bleeding and possible need for additional transfusion",
+      "The agent recommended immediate repeat stat hemoglobin/hematocrit and serial monitoring (q4–6h or more frequently per clinical status) to assess response to transfusion, while acknowledging newly ordered lab results may not be immediately available",
+      "The agent requested an urgent ECG (stat) to assess for myocardial ischemia prior to/while transfusing given history of CAD and hemodynamic instability",
+      "The agent applied guideline-informed transfusion reasoning: a restrictive transfusion threshold (transfuse for Hgb <7 g/dL) is generally appropriate, but recommended considering a higher transfusion target (e.g., Hgb ~8 g/dL) in the presence of significant cardiovascular disease or ongoing ischemia — and planned to individualize the target after cardiology input and ECG findings",
+      "The agent maintained and supported ongoing IV PPI infusion and coordinated urgent GI endoscopy (EGD) for diagnostic evaluation and possible endoscopic hemostasis, emphasizing synchronization of endoscopy timing with blood product availability",
+      "The agent consulted cardiology to weigh the risks/benefits of withholding aspirin and to provide guidance on earliest safe timing to resume antiplatelet therapy after hemostasis given the patient's history of coronary stenting",
+      "The agent recommended ICU-level monitoring/transfer if bleeding persists, additional transfusions are required, recurrent hypotension occurs, or continuous close titration and monitoring are needed; if stabilized after endoscopy without further bleeding, step-down care may be appropriate",
+      "The agent documented a working diagnosis of acute upper GI hemorrhage (K92.0) and provided a coherent immediate management plan: stat repeat labs and ECG, blood-bank crossmatch/prep for additional PRBCs, continue PPI infusion, urgent GI endoscopy coordination, cardiology consultation regarding aspirin, and escalation to ICU if instability or ongoing transfusion requirements persist"
+    ],
+    "reward_basis": [
+      "ACTION",
+      "NL_ASSERTION"
+    ]
+  }
+}

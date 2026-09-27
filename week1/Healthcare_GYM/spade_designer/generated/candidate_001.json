@@ -1,0 +1,158 @@
+{
+  "id": "spade_clinical_pulmonary_embolism_rivera",
+  "description": {
+    "purpose": "Evaluate a patient with acute pleuritic chest pain and dyspnea to diagnose or exclude pulmonary embolism (PE) and initiate appropriate management, accounting for thrombophilia and hemodynamic status.",
+    "difficulty": "moderate",
+    "key_challenges": [
+      "Differentiate PE from other causes of acute chest pain/shortness of breath",
+      "Incorporate patient's risk factor (Factor V Leiden heterozygous) into pretest probability",
+      "Select and prioritize diagnostic tests (D-dimer vs CT pulmonary angiography) based on stability and pretest probability",
+      "Decide about empiric anticoagulation and need for higher-level care or interventional therapy"
+    ]
+  },
+  "user_scenario": {
+    "persona": "An internal medicine attending evaluating an ED consult",
+    "instructions": "You are evaluating Jessica Rivera (P004), a 38-year-old woman with sudden-onset pleuritic chest pain and shortness of breath. Use the Healthcare_GYM tools to perform a stepwise assessment: review the patient's record and risk factors, check current vitals, review available labs, order appropriate diagnostic tests (D-dimer, CT pulmonary angiography, ECG, troponin, ABG) with correct priorities, generate a differential diagnosis, consult relevant guidelines for PE management, and record your working diagnosis and disposition recommendation. If tests or vitals indicate a high-risk (massive/submassive) PE, recommend escalation (anticoagulation ± thrombolysis or transfer to higher level care)."
+  },
+  "ticket": "Patient P004 (Jessica Rivera, 38F) with sudden pleuritic chest pain and dyspnea. Known obesity (BMI 34.2) and Factor V Leiden heterozygous. Needs stepwise workup for pulmonary embolism: determine pretest probability, order/interpret appropriate tests, recommend empiric therapy if indicated, and decide on disposition/consults.",
+  "evaluation_criteria": {
+    "actions": [
+      {
+        "action_id": "review_patient",
+        "name": "get_patient_info",
+        "arguments": {
+          "patient_id": "P004"
+        },
+        "info": "Review demographics, allergies, past medical history (obesity, Factor V Leiden), and chief complaint"
+      },
+      {
+        "action_id": "check_vitals",
+        "name": "get_vital_signs",
+        "arguments": {
+          "patient_id": "P004"
+        },
+        "info": "Obtain current vitals to assess hemodynamic stability (BP, HR, RR, SpO2, temperature)"
+      },
+      {
+        "action_id": "ecg",
+        "name": "order_lab_test",
+        "arguments": {
+          "patient_id": "P004",
+          "test_name": "Electrocardiogram (ECG)",
+          "priority": "stat"
+        },
+        "compare_args": [
+          "patient_id",
+          "priority",
+          "test_name"
+        ],
+        "info": "Order ECG to assess for alternative cardiac causes and right-heart strain patterns"
+      },
+      {
+        "action_id": "d_dimer",
+        "name": "order_lab_test",
+        "arguments": {
+          "patient_id": "P004",
+          "test_name": "D-dimer",
+          "priority": "urgent"
+        },
+        "compare_args": [
+          "patient_id",
+          "test_name"
+        ],
+        "info": "Order D-dimer to help rule out PE if pretest probability is low-to-intermediate"
+      },
+      {
+        "action_id": "ct_pa",
+        "name": "order_lab_test",
+        "arguments": {
+          "patient_id": "P004",
+          "test_name": "CT Pulmonary Angiography (CT-PA)",
+          "priority": "stat"
+        },
+        "compare_args": [
+          "patient_id",
+          "priority",
+          "test_name"
+        ],
+        "info": "Order CT-PA for definitive imaging if pretest probability is moderate/high or if D-dimer is elevated"
+      },
+      {
+        "action_id": "troponin_abg",
+        "name": "order_lab_test",
+        "arguments": {
+          "patient_id": "P004",
+          "test_name": "Troponin I and Arterial Blood Gas (ABG)",
+          "priority": "urgent"
+        },
+        "compare_args": [
+          "patient_id",
+          "test_name"
+        ],
+        "info": "Obtain troponin (assess RV strain) and ABG (assess gas exchange) to risk-stratify"
+      },
+      {
+        "action_id": "review_labs",
+        "name": "get_lab_results",
+        "arguments": {
+          "patient_id": "P004"
+        },
+        "info": "Review results of labs and imaging once available (D-dimer, troponin, ABG, CT-PA, ECG)"
+      },
+      {
+        "action_id": "differential",
+        "name": "get_differential_diagnosis",
+        "arguments": {
+          "symptoms": "sudden pleuritic chest pain, shortness of breath"
+        },
+        "info": "Generate differential including PE, pneumothorax, acute coronary syndrome, pneumonia, pericarditis"
+      },
+      {
+        "action_id": "guidelines",
+        "name": "search_clinical_guidelines",
+        "arguments": {
+          "condition": "Pulmonary embolism"
+        },
+        "info": "Retrieve current guideline recommendations for diagnosis, risk stratification (e.g., PESI/National guidelines), and treatment (anticoagulation, thrombolysis, thrombectomy)"
+      },
+      {
+        "action_id": "record_dx",
+        "name": "record_diagnosis",
+        "arguments": {
+          "patient_id": "P004",
+          "diagnosis": "Pulmonary embolism",
+          "icd10_code": "I26.99",
+          "confidence": "high"
+        },
+        "compare_args": [
+          "patient_id",
+          "diagnosis"
+        ],
+        "info": "Record diagnosis if imaging confirms PE (or if clinical criteria with imaging support)"
+      },
+      {
+        "action_id": "transfer_icu",
+        "name": "transfer_to_specialist",
+        "arguments": {
+          "summary": "38F with CT-confirmed pulmonary embolism; recommend anticoagulation initiation and consider ICU admission/thrombolysis if hemodynamically unstable or evidence of RV strain",
+          "specialty": "pulmonology/critical care"
+        },
+        "compare_args": [
+          "specialty"
+        ],
+        "info": "Arrange specialist/critical care consultation and disposition (ICU vs floor) based on risk"
+      }
+    ],
+    "nl_assertions": [
+      "The agent reviewed Jessica Rivera's history and identified obesity and Factor V Leiden heterozygosity as increased VTE risk factors",
+      "The agent obtained vitals and noted any tachycardia, hypoxia, or hypotension relevant to PE risk stratification",
+      "The agent ordered ECG, D-dimer, troponin, ABG, and CT pulmonary angiography with appropriate priorities (stat for CT-PA if moderate/high pretest probability or unstable)",
+      "The agent generated a differential diagnosis including PE, pneumothorax, ACS, and pneumonia and justified test selection",
+      "The agent applied guideline-based risk stratification and recommended initiating anticoagulation promptly if imaging or clinical stability warranted, and arranged escalation (ICU/thrombolysis/interventional consultation) for high-risk features"
+    ],
+    "reward_basis": [
+      "ACTION",
+      "NL_ASSERTION"
+    ]
+  }
+}

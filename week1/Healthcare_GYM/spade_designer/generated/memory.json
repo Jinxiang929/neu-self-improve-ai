@@ -1,0 +1,876 @@
+[
+  {
+    "iteration": 1,
+    "task_id": "spade_clinical_pulmonary_embolism_rivera",
+    "difficulty": "moderate",
+    "complexity_score": 17.5,
+    "valid": true,
+    "task": {
+      "id": "spade_clinical_pulmonary_embolism_rivera",
+      "description": {
+        "purpose": "Evaluate a patient with acute pleuritic chest pain and dyspnea to diagnose or exclude pulmonary embolism (PE) and initiate appropriate management, accounting for thrombophilia and hemodynamic status.",
+        "difficulty": "moderate",
+        "key_challenges": [
+          "Differentiate PE from other causes of acute chest pain/shortness of breath",
+          "Incorporate patient's risk factor (Factor V Leiden heterozygous) into pretest probability",
+          "Select and prioritize diagnostic tests (D-dimer vs CT pulmonary angiography) based on stability and pretest probability",
+          "Decide about empiric anticoagulation and need for higher-level care or interventional therapy"
+        ]
+      },
+      "user_scenario": {
+        "persona": "An internal medicine attending evaluating an ED consult",
+        "instructions": "You are evaluating Jessica Rivera (P004), a 38-year-old woman with sudden-onset pleuritic chest pain and shortness of breath. Use the Healthcare_GYM tools to perform a stepwise assessment: review the patient's record and risk factors, check current vitals, review available labs, order appropriate diagnostic tests (D-dimer, CT pulmonary angiography, ECG, troponin, ABG) with correct priorities, generate a differential diagnosis, consult relevant guidelines for PE management, and record your working diagnosis and disposition recommendation. If tests or vitals indicate a high-risk (massive/submassive) PE, recommend escalation (anticoagulation ± thrombolysis or transfer to higher level care)."
+      },
+      "ticket": "Patient P004 (Jessica Rivera, 38F) with sudden pleuritic chest pain and dyspnea. Known obesity (BMI 34.2) and Factor V Leiden heterozygous. Needs stepwise workup for pulmonary embolism: determine pretest probability, order/interpret appropriate tests, recommend empiric therapy if indicated, and decide on disposition/consults.",
+      "evaluation_criteria": {
+        "actions": [
+          {
+            "action_id": "review_patient",
+            "name": "get_patient_info",
+            "arguments": {
+              "patient_id": "P004"
+            },
+            "info": "Review demographics, allergies, past medical history (obesity, Factor V Leiden), and chief complaint"
+          },
+          {
+            "action_id": "check_vitals",
+            "name": "get_vital_signs",
+            "arguments": {
+              "patient_id": "P004"
+            },
+            "info": "Obtain current vitals to assess hemodynamic stability (BP, HR, RR, SpO2, temperature)"
+          },
+          {
+            "action_id": "ecg",
+            "name": "order_lab_test",
+            "arguments": {
+              "patient_id": "P004",
+              "test_name": "Electrocardiogram (ECG)",
+              "priority": "stat"
+            },
+            "compare_args": [
+              "patient_id",
+              "priority",
+              "test_name"
+            ],
+            "info": "Order ECG to assess for alternative cardiac causes and right-heart strain patterns"
+          },
+          {
+            "action_id": "d_dimer",
+            "name": "order_lab_test",
+            "arguments": {
+              "patient_id": "P004",
+              "test_name": "D-dimer",
+              "priority": "urgent"
+            },
+            "compare_args": [
+              "patient_id",
+              "test_name"
+            ],
+            "info": "Order D-dimer to help rule out PE if pretest probability is low-to-intermediate"
+          },
+          {
+            "action_id": "ct_pa",
+            "name": "order_lab_test",
+            "arguments": {
+              "patient_id": "P004",
+              "test_name": "CT Pulmonary Angiography (CT-PA)",
+              "priority": "stat"
+            },
+            "compare_args": [
+              "patient_id",
+              "priority",
+              "test_name"
+            ],
+            "info": "Order CT-PA for definitive imaging if pretest probability is moderate/high or if D-dimer is elevated"
+          },
+          {
+            "action_id": "troponin_abg",
+            "name": "order_lab_test",
+            "arguments": {
+              "patient_id": "P004",
+              "test_name": "Troponin I and Arterial Blood Gas (ABG)",
+              "priority": "urgent"
+            },
+            "compare_args": [
+              "patient_id",
+              "test_name"
+            ],
+            "info": "Obtain troponin (assess RV strain) and ABG (assess gas exchange) to risk-stratify"
+          },
+          {
+            "action_id": "review_labs",
+            "name": "get_lab_results",
+            "arguments": {
+              "patient_id": "P004"
+            },
+            "info": "Review results of labs and imaging once available (D-dimer, troponin, ABG, CT-PA, ECG)"
+          },
+          {
+            "action_id": "differential",
+            "name": "get_differential_diagnosis",
+            "arguments": {
+              "symptoms": "sudden pleuritic chest pain, shortness of breath"
+            },
+            "info": "Generate differential including PE, pneumothorax, acute coronary syndrome, pneumonia, pericarditis"
+          },
+          {
+            "action_id": "guidelines",
+            "name": "search_clinical_guidelines",
+            "arguments": {
+              "condition": "Pulmonary embolism"
+            },
+            "info": "Retrieve current guideline recommendations for diagnosis, risk stratification (e.g., PESI/National guidelines), and treatment (anticoagulation, thrombolysis, thrombectomy)"
+          },
+          {
+            "action_id": "record_dx",
+            "name": "record_diagnosis",
+            "arguments": {
+              "patient_id": "P004",
+              "diagnosis": "Pulmonary embolism",
+              "icd10_code": "I26.99",
+              "confidence": "high"
+            },
+            "compare_args": [
+              "patient_id",
+              "diagnosis"
+            ],
+            "info": "Record diagnosis if imaging confirms PE (or if clinical criteria with imaging support)"
+          },
+          {
+            "action_id": "transfer_icu",
+            "name": "transfer_to_specialist",
+            "arguments": {
+              "summary": "38F with CT-confirmed pulmonary embolism; recommend anticoagulation initiation and consider ICU admission/thrombolysis if hemodynamically unstable or evidence of RV strain",
+              "specialty": "pulmonology/critical care"
+            },
+            "compare_args": [
+              "specialty"
+            ],
+            "info": "Arrange specialist/critical care consultation and disposition (ICU vs floor) based on risk"
+          }
+        ],
+        "nl_assertions": [
+          "The agent reviewed Jessica Rivera's history and identified obesity and Factor V Leiden heterozygosity as increased VTE risk factors",
+          "The agent obtained vitals and noted any tachycardia, hypoxia, or hypotension relevant to PE risk stratification",
+          "The agent ordered ECG, D-dimer, troponin, ABG, and CT pulmonary angiography with appropriate priorities (stat for CT-PA if moderate/high pretest probability or unstable)",
+          "The agent generated a differential diagnosis including PE, pneumothorax, ACS, and pneumonia and justified test selection",
+          "The agent applied guideline-based risk stratification and recommended initiating anticoagulation promptly if imaging or clinical stability warranted, and arranged escalation (ICU/thrombolysis/interventional consultation) for high-risk features"
+        ],
+        "reward_basis": [
+          "ACTION",
+          "NL_ASSERTION"
+        ]
+      }
+    }
+  },
+  {
+    "iteration": 2,
+    "task_id": "spade_clinical_submassive_pe_p004",
+    "difficulty": "hard",
+    "complexity_score": 18.5,
+    "valid": true,
+    "task": {
+      "id": "spade_clinical_submassive_pe_p004",
+      "description": {
+        "purpose": "Assess severity and recommend initial and disposition management for a patient with CT-confirmed pulmonary embolism and right ventricular strain",
+        "difficulty": "hard",
+        "key_challenges": [
+          "Integrate imaging (CT-PA) findings with biomarkers (troponin, BNP) and vitals to risk-stratify PE as submassive/intermediate",
+          "Choose initial anticoagulation strategy appropriate for potential need for invasive therapies (e.g., catheter-directed thrombolysis) and for ICU vs ward placement",
+          "Coordinate timely specialist consultations (pulmonary/critical care and interventional radiology) and order baseline labs necessary prior to interventions without relying on newly generated results",
+          "Decide on anticoagulation duration considering provoking factors (recent long flight, OCP use) and underlying thrombophilia (Factor V Leiden heterozygosity)"
+        ]
+      },
+      "user_scenario": {
+        "persona": "Emergency medicine attending evaluating an ED patient with confirmed pulmonary embolism",
+        "instructions": "You are the attending physician caring for Jessica Rivera (P004), who has sudden pleuritic chest pain and dyspnea. CT-PA in the record shows bilateral pulmonary emboli with RV/LV ratio 1.2. Troponin and BNP are elevated; D-dimer is markedly high; patient is tachycardic and mildly hypoxic. Ask the agent to perform a structured assessment: review the chart, risk-stratify the PE (massive vs submassive vs low-risk), recommend immediate management (anticoagulation choice, need for thrombolysis or catheter intervention, level of care), order baseline tests needed before interventions, request specialty consultations, and provide recommendations on contraception (OCP) and anticoagulation duration given Factor V Leiden heterozygosity and provocation history."
+      },
+      "ticket": "Patient P004 (Jessica Rivera, 38F) with CT-PA–confirmed bilateral pulmonary emboli, RV strain (RV/LV 1.2), elevated troponin and BNP, tachycardia and hypoxia. Needs: chart review, risk stratification, immediate management plan (anticoagulation vs thrombolysis/catheter therapy), disposition (ICU vs ward), baseline labs ordered prior to invasive therapy, specialist consults, and long-term anticoagulation duration recommendation considering recent long flight and OCP use plus Factor V Leiden heterozygosity.",
+      "evaluation_criteria": {
+        "actions": [
+          {
+            "action_id": "review_patient",
+            "name": "get_patient_info",
+            "arguments": {
+              "patient_id": "P004"
+            },
+            "info": "Retrieve demographics, allergies, active medications (OCP), past medical history (Factor V Leiden), and clinical note describing CT-PA results"
+          },
+          {
+            "action_id": "check_vitals",
+            "name": "get_vital_signs",
+            "arguments": {
+              "patient_id": "P004"
+            },
+            "info": "Review current vital signs (tachycardia, tachypnea, hypoxia) and trends to assess hemodynamic stability"
+          },
+          {
+            "action_id": "review_labs",
+            "name": "get_lab_results",
+            "arguments": {
+              "patient_id": "P004"
+            },
+            "info": "Review D-dimer, troponin, BNP, ABG values to support evidence of RV strain and gas exchange impairment"
+          },
+          {
+            "action_id": "differential",
+            "name": "get_differential_diagnosis",
+            "arguments": {
+              "symptoms": "pleuritic chest pain, dyspnea, hypoxia"
+            },
+            "info": "Generate differential; confirm PE is the leading diagnosis given CT-PA result and supporting labs"
+          },
+          {
+            "action_id": "guidelines",
+            "name": "search_clinical_guidelines",
+            "arguments": {
+              "condition": "Pulmonary embolism management (risk stratification, anticoagulation, thrombolysis, catheter-directed therapy)"
+            },
+            "info": "Retrieve guideline recommendations for management of submassive (intermediate-risk) PE and criteria for escalation"
+          },
+          {
+            "action_id": "order_coag_and_type",
+            "name": "order_lab_test",
+            "arguments": {
+              "patient_id": "P004",
+              "test_name": "Coagulation panel (PT/INR, aPTT), Type and Screen",
+              "priority": "stat"
+            },
+            "compare_args": [
+              "patient_id",
+              "priority"
+            ],
+            "info": "Order baseline coagulation and blood bank testing prior to anticoagulation or potential thrombolysis/intervention"
+          },
+          {
+            "action_id": "order_venous_duplex",
+            "name": "order_lab_test",
+            "arguments": {
+              "patient_id": "P004",
+              "test_name": "Lower extremity venous duplex ultrasound (to assess for DVT)",
+              "priority": "routine"
+            },
+            "info": "Assess for proximal DVT as source and to inform overall management"
+          },
+          {
+            "action_id": "record_dx",
+            "name": "record_diagnosis",
+            "arguments": {
+              "patient_id": "P004",
+              "diagnosis": "Acute pulmonary embolism with right ventricular strain (submassive/intermediate-risk)",
+              "icd10_code": "I26.99",
+              "confidence": "high"
+            },
+            "compare_args": [
+              "patient_id",
+              "diagnosis"
+            ],
+            "info": "Document working diagnosis with risk descriptor (submassive/intermediate)"
+          },
+          {
+            "action_id": "consult_specialty",
+            "name": "transfer_to_specialist",
+            "arguments": {
+              "summary": "38F with CT-confirmed bilateral PE, RV/LV 1.2, elevated troponin and BNP—intermediate-risk PE requiring consideration of ICU monitoring and evaluation for catheter-directed therapy if deterioration",
+              "specialty": "pulmonary/critical care"
+            },
+            "compare_args": [
+              "specialty"
+            ],
+            "info": "Request urgent pulmonary/critical care consultation for disposition to ICU vs ward and assistance with advanced therapies"
+          },
+          {
+            "action_id": "consult_ir",
+            "name": "transfer_to_specialist",
+            "arguments": {
+              "summary": "38F with submassive PE and RV strain; consult interventional radiology regarding feasibility of catheter-directed thrombolysis if clinical deterioration or if multidisciplinary team recommends escalation",
+              "specialty": "interventional radiology"
+            },
+            "compare_args": [
+              "specialty"
+            ],
+            "info": "Notify interventional radiology early to expedite time-sensitive procedures if indicated"
+          }
+        ],
+        "nl_assertions": [
+          "The agent reviewed and cited the CT-PA confirmation of bilateral PE and RV/LV ratio 1.2 from the clinical note",
+          "The agent identified physiologic evidence of RV strain (elevated troponin and BNP) and clinically classified the patient as intermediate/submassive risk rather than massive",
+          "The agent recommended immediate therapeutic anticoagulation (e.g., unfractionated heparin infusion or weight-based LMWH) as first-line, and explained why systemic thrombolysis is not routinely indicated now but should be considered if hemodynamic deterioration occurs",
+          "The agent ordered baseline coagulation studies and type & screen prior to any invasive or thrombolytic therapy and requested lower-extremity duplex to look for DVT",
+          "The agent recommended ICU-level monitoring (or step-down if ICU unavailable) given RV dysfunction and hypoxemia and requested urgent pulmonary/critical care and interventional radiology consultations",
+          "The agent advised stopping estrogen-containing OCPs and discussed anticoagulation duration: treat as provoked (recent long flight + OCPs) and recommend finite anticoagulation (e.g., 3 months) but incorporate Factor V Leiden heterozygosity into shared decision-making and guideline-based duration planning",
+          "The agent noted there are no documented medication allergies that would contraindicate guideline-recommended anticoagulation"
+        ],
+        "reward_basis": [
+          "ACTION",
+          "NL_ASSERTION"
+        ]
+      }
+    }
+  },
+  {
+    "iteration": 3,
+    "task_id": "spade_clinical_dka_marcus",
+    "difficulty": "hard",
+    "complexity_score": 18.5,
+    "valid": true,
+    "task": {
+      "id": "spade_clinical_dka_marcus",
+      "description": {
+        "purpose": "Perform a stepwise assessment and management plan for a patient in diabetic ketoacidosis (DKA) with severe metabolic derangement and hyperkalemia, and coordinate urgent inpatient care and social support for insulin access.",
+        "difficulty": "hard",
+        "key_challenges": [
+          "Integrate arterial blood gas, serum electrolytes, glucose, and ketone results to classify DKA severity and immediate risks",
+          "Manage competing priorities: hyperkalemia (K 5.8 mEq/L) versus need for insulin which will lower potassium",
+          "Choose fluid resuscitation strategy given relative hemodynamic status and risk of cerebral edema is low (adult) but monitor closely",
+          "Decide disposition (ICU vs ward) given altered mental status (GCS 13), severe acidosis (pH 7.18), tachycardia/tachypnea, and ongoing insulin supply issues",
+          "Coordinate urgent monitoring (serial electrolytes), specialty consultations (endocrinology/critical care), and arrange diabetes access support/social work"
+        ]
+      },
+      "user_scenario": {
+        "persona": "Emergency medicine attending preparing handoff and treatment plan for a newly arrived patient with suspected severe DKA",
+        "instructions": "You are the attending physician responsible for Marcus Johnson (P005). Using the Healthcare_GYM tools, perform a structured assessment: review the chart, vitals, and labs; classify DKA severity; decide immediate management steps (IV fluids, insulin strategy, potassium management) consistent with available labs (note K = 5.8 mEq/L already documented); order urgent monitoring tests (repeat BMP/electrolytes, ECG) with appropriate priority; request specialty consults and disposition (ICU vs ward); document the working diagnosis. Do NOT assume results from newly ordered labs will be available unless already present in the chart."
+      },
+      "ticket": "Patient P005 (Marcus Johnson, 24M) type 1 diabetic presenting confused with vomiting and Kussmaul respirations. Labs already show: glucose 542 mg/dL, arterial pH 7.18, bicarbonate 8 mEq/L, anion gap 28, beta-hydroxybutyrate 6.8 mmol/L, potassium 5.8 mEq/L, HbA1c 12.4%. Initiated DKA protocol in clinical note (IV insulin drip, aggressive IVF, K+ monitoring q2h). Needs comprehensive assessment: confirm severity, reconcile potassium management before/when starting insulin, recommend fluid/insulin/potassium monitoring plan, decide level of care, request consults, and address insulin access/social support for ongoing outpatient management planning.",
+      "evaluation_criteria": {
+        "actions": [
+          {
+            "action_id": "review_patient",
+            "name": "get_patient_info",
+            "arguments": {
+              "patient_id": "P005"
+            },
+            "info": "Retrieve demographics, past medical history (T1DM), medications, allergies, and the admission note describing DKA presentation and initiated DKA protocol"
+          },
+          {
+            "action_id": "check_vitals",
+            "name": "get_vital_signs",
+            "arguments": {
+              "patient_id": "P005"
+            },
+            "info": "Obtain current and recent vital signs to assess hemodynamic status, mental status, and respiratory compensation (tachycardia, tachypnea, blood pressure, GCS reported in note)"
+          },
+          {
+            "action_id": "review_labs",
+            "name": "get_lab_results",
+            "arguments": {
+              "patient_id": "P005"
+            },
+            "info": "Review existing labs (glucose, arterial pH, bicarbonate, anion gap, beta-hydroxybutyrate, potassium, HbA1c) to classify severity of DKA and identify immediate risks (e.g., hyperkalemia)"
+          },
+          {
+            "action_id": "guidelines",
+            "name": "search_clinical_guidelines",
+            "arguments": {
+              "condition": "Diabetic ketoacidosis adult management (insulin, fluids, potassium replacement, monitoring, ICU indications)"
+            },
+            "info": "Retrieve guideline-based recommendations for adult DKA management, potassium thresholds for replacement and insulin initiation, fluid resuscitation, and criteria for ICU admission"
+          },
+          {
+            "action_id": "order_ecg",
+            "name": "order_lab_test",
+            "arguments": {
+              "patient_id": "P005",
+              "test_name": "Electrocardiogram (ECG)",
+              "priority": "stat"
+            },
+            "compare_args": [
+              "patient_id",
+              "test_name",
+              "priority"
+            ],
+            "info": "Obtain ECG urgently to evaluate for ECG changes of hyperkalemia (peaked T waves, conduction abnormalities) prior to/while initiating therapy"
+          },
+          {
+            "action_id": "order_repeat_bmp",
+            "name": "order_lab_test",
+            "arguments": {
+              "patient_id": "P005",
+              "test_name": "Basic Metabolic Panel (BMP) — repeat potassium/electrolytes",
+              "priority": "stat"
+            },
+            "compare_args": [
+              "patient_id",
+              "test_name",
+              "priority"
+            ],
+            "info": "Order immediate repeat BMP to verify potassium and renal function and then arrange serial BMPs (q1-2h) as per DKA protocol; note that results may not be immediately available"
+          },
+          {
+            "action_id": "record_dx",
+            "name": "record_diagnosis",
+            "arguments": {
+              "patient_id": "P005",
+              "diagnosis": "Diabetic ketoacidosis (severe)",
+              "icd10_code": "E10.10",
+              "confidence": "high"
+            },
+            "compare_args": [
+              "patient_id",
+              "diagnosis"
+            ],
+            "info": "Document the working diagnosis of severe DKA given pH 7.18, HCO3 8, AG 28, markedly elevated ketones and glucose"
+          },
+          {
+            "action_id": "consult_critical_endocrine",
+            "name": "transfer_to_specialist",
+            "arguments": {
+              "summary": "24M in severe DKA (pH 7.18, HCO3 8, AG 28) with GCS 13 and initial hyperkalemia (K 5.8). Recommend ICU admission for close monitoring, insulin infusion titration, and frequent electrolyte checks; consider endocrine consultation for DKA protocol optimization and diabetes education planning.",
+              "specialty": "critical care/endocrinology"
+            },
+            "compare_args": [
+              "specialty"
+            ],
+            "info": "Request critical care and endocrine involvement to assist with intensive monitoring, insulin/potassium titration, and disposition"
+          },
+          {
+            "action_id": "arrange_social_work",
+            "name": "transfer_to_specialist",
+            "arguments": {
+              "summary": "Patient reports running out of insulin due to cost. Arrange social work and diabetes education referral to address medication access, insurance/assistance programs, and outpatient follow-up planning.",
+              "specialty": "social work/diabetes education"
+            },
+            "compare_args": [
+              "specialty"
+            ],
+            "info": "Coordinate nonmedical support to address insulin access and post-discharge diabetes management"
+          }
+        ],
+        "nl_assertions": [
+          "The agent recognized that Marcus Johnson meets criteria for severe DKA based on documented findings (arterial pH 7.18, serum bicarbonate 8 mEq/L, anion gap 28, beta-hydroxybutyrate 6.8 mmol/L, glucose 542 mg/dL)",
+          "The agent identified hyperkalemia (serum K 5.8 mEq/L) as an immediate consideration and recommended obtaining an ECG to evaluate for hyperkalemic effects prior to or while initiating therapy",
+          "The agent applied guideline-based potassium management: do not give potassium replacement when K is above the replacement threshold (e.g., >5.2–5.5 mEq/L); instead start insulin infusion per DKA protocol while arranging frequent (hourly to q2h) serum potassium monitoring and be prepared to replace potassium if levels fall into the replacement range",
+          "The agent recommended initial fluid resuscitation (e.g., isotonic crystalloid bolus followed by adjusted maintenance/resuscitation rates per DKA guidance) while monitoring hemodynamics and avoiding fluid overload, and described rationale given the patient's vitals and adult status",
+          "The agent recommended initiating/continuing an insulin infusion according to DKA protocols with close bedside monitoring of potassium and glucose (adjusting insulin rate and dextrose infusion as glucose falls), and explicitly linked insulin initiation to the need for serial potassium checks",
+          "The agent recommended ICU-level monitoring/transfer given severe metabolic acidosis, altered mental status (GCS 13), tachycardia and tachypnea, and the need for frequent electrolyte checks and insulin titration",
+          "The agent ordered repeat BMP/electrolytes (stat and serial monitoring) and an ECG (stat) to guide urgent potassium and arrhythmia management, but did not assume results of newly ordered tests would already be available",
+          "The agent recommended involving endocrinology and critical care for protocol oversight and arranged social work/diabetes education to address insulin access and plan outpatient follow-up given the patient's reported lapse in insulin use due to cost"
+        ],
+        "reward_basis": [
+          "ACTION",
+          "NL_ASSERTION"
+        ]
+      }
+    }
+  },
+  {
+    "iteration": 4,
+    "task_id": "spade_clinical_urgent_upper_gi_bleed_p006",
+    "difficulty": "hard",
+    "complexity_score": 23.5,
+    "valid": true,
+    "task": {
+      "id": "spade_clinical_urgent_upper_gi_bleed_p006",
+      "description": {
+        "purpose": "Perform a structured, multi-step assessment and management plan for an elderly patient with acute upper gastrointestinal hemorrhage, balancing immediate resuscitation/transfusion needs with cardiology concerns about antiplatelet therapy after prior coronary stent, and coordinating urgent endoscopic hemostasis and blood-bank support.",
+        "difficulty": "hard",
+        "key_challenges": [
+          "Integrate hemodynamics and existing labs (Hgb 7.2 g/dL, Hct 21.8%, BUN 42 mg/dL, lactate 3.2 mmol/L, Type & Screen A negative) to decide transfusion thresholds and further resuscitation",
+          "Coordinate time-critical interventions: urgent EGD scheduling with GI, blood product crossmatch/availability with blood bank, and determine ICU vs ward disposition",
+          "Weigh risks of holding versus continuing aspirin in a patient with prior coronary stent and active major bleeding; involve cardiology for individualized timing of antiplatelet resumption",
+          "Order and interpret appropriate monitoring tests (serial Hgb/Hct, ECG for ischemia given CAD) without assuming immediate availability of newly ordered results",
+          "Apply guideline-based transfusion thresholds and PPI/endoscopic timing while documenting a clear plan for escalation if endoscopy fails"
+        ]
+      },
+      "user_scenario": {
+        "persona": "Emergency medicine attending coordinating care for an elderly patient with brisk upper GI bleeding",
+        "instructions": "You are the attending responsible for Dorothy Patterson (P006), who presented with hematemesis and melena and is hemodynamically significant. Use Healthcare_GYM tools to: review chart, vitals, and labs; interpret risk scores and high-risk features; decide transfusion strategy and target hemoglobin given her CAD and ongoing bleeding; order urgent tests and blood-bank actions required for endoscopy; coordinate GI and cardiology consultations about timing of endoscopy and antiplatelet management; determine disposition (ICU vs floor) and document the working diagnosis and immediate plan. Do NOT assume results of newly ordered labs will already be available."
+      },
+      "ticket": "Patient P006 (Dorothy Patterson, 72F) with acute hematemesis and melena, hypotension and tachycardia on arrival, Hgb 7.2 g/dL, Hct 21.8%, BUN 42, lactate 3.2, INR 1.0, Type & Screen: A negative. GI consulted for urgent EGD and 2 units pRBC transfused already per note. Needs comprehensive plan: decide transfusion thresholds and additional blood product needs, request urgent endoscopy coordination with blood bank, evaluate need for ICU admission, and consult cardiology regarding withholding/resuming aspirin given prior coronary stent.",
+      "evaluation_criteria": {
+        "actions": [
+          {
+            "action_id": "review_patient",
+            "name": "get_patient_info",
+            "arguments": {
+              "patient_id": "P006"
+            },
+            "info": "Review demographics, allergies, active medications (aspirin, naproxen, omeprazole), past medical history (CAD with prior stent, HTN, OA), and admission note describing GI bleed and initial resuscitation"
+          },
+          {
+            "action_id": "check_vitals",
+            "name": "get_vital_signs",
+            "arguments": {
+              "patient_id": "P006"
+            },
+            "info": "Obtain current and trend vital signs to assess ongoing hemodynamic stability (blood pressure, heart rate, orthostatic changes, temperature, RR, SpO2)"
+          },
+          {
+            "action_id": "review_labs",
+            "name": "get_lab_results",
+            "arguments": {
+              "patient_id": "P006"
+            },
+            "info": "Review existing lab results (Hgb/Hct, BUN/Cr, INR, lactate, Type & Screen) and note which are critical for risk stratification and transfusion planning"
+          },
+          {
+            "action_id": "generate_differential",
+            "name": "get_differential_diagnosis",
+            "arguments": {
+              "symptoms": "hematemesis, melena, hypotension"
+            },
+            "info": "Generate differential for upper GI bleeding (peptic ulcer disease, erosive gastritis from NSAID use, variceal bleeding less likely without liver disease, Mallory-Weiss) to guide endoscopic urgency and expected interventions"
+          },
+          {
+            "action_id": "guidelines",
+            "name": "search_clinical_guidelines",
+            "arguments": {
+              "condition": "Upper gastrointestinal bleeding: transfusion thresholds, PPI therapy, timing of endoscopy, and antiplatelet management with coronary stents"
+            },
+            "info": "Retrieve guideline recommendations to inform transfusion threshold (restrictive vs liberal), PPI and endoscopy timing, and cardiology guidance for antiplatelet therapy in active bleeding"
+          },
+          {
+            "action_id": "order_repeat_hgb",
+            "name": "order_lab_test",
+            "arguments": {
+              "patient_id": "P006",
+              "test_name": "Hemoglobin and Hematocrit (stat repeat; serial q4-6h or more frequent per protocol)",
+              "priority": "stat"
+            },
+            "compare_args": [
+              "patient_id",
+              "test_name",
+              "priority"
+            ],
+            "info": "Order immediate repeat Hgb/Hct to assess response to transfusion and ongoing blood loss (note: result may not be immediately available)"
+          },
+          {
+            "action_id": "order_type_cross",
+            "name": "order_lab_test",
+            "arguments": {
+              "patient_id": "P006",
+              "test_name": "Type and Crossmatch for 2-4 units PRBC (stat) and prepare for additional units",
+              "priority": "stat"
+            },
+            "compare_args": [
+              "patient_id",
+              "test_name",
+              "priority"
+            ],
+            "info": "Ensure blood bank prepares crossmatched units given ongoing/transiently severe bleeding despite an existing Type & Screen result"
+          },
+          {
+            "action_id": "order_ecg",
+            "name": "order_lab_test",
+            "arguments": {
+              "patient_id": "P006",
+              "test_name": "Electrocardiogram (ECG)",
+              "priority": "stat"
+            },
+            "compare_args": [
+              "patient_id",
+              "test_name",
+              "priority"
+            ],
+            "info": "Obtain ECG to evaluate for ischemia or arrhythmia risk prior to/while transfusing given history of CAD and recent hypotension"
+          },
+          {
+            "action_id": "coordinate_gi",
+            "name": "transfer_to_specialist",
+            "arguments": {
+              "summary": "72F with active upper GI bleeding, Hgb 7.2 after initial resuscitation, receiving IV PPI drip; recommend urgent endoscopy for diagnosis and hemostasis. Require endoscopy team readiness, blood product availability at bedside, and plan for repeat Hgb post-transfusion. Please advise on timing (immediate vs after stabilization) and expected endoscopic interventions.",
+              "specialty": "gastroenterology"
+            },
+            "compare_args": [
+              "specialty"
+            ],
+            "info": "Request urgent GI involvement to perform EGD and coordinate timing with resuscitation and blood-bank preparedness"
+          },
+          {
+            "action_id": "consult_cardio",
+            "name": "transfer_to_specialist",
+            "arguments": {
+              "summary": "Patient has prior coronary stent (2020) on chronic aspirin. Currently holding aspirin per admission note due to bleeding. Please advise on ischemic risk vs bleeding risk and timing for safe resumption of antiplatelet therapy after endoscopic hemostasis.",
+              "specialty": "cardiology"
+            },
+            "compare_args": [
+              "specialty"
+            ],
+            "info": "Obtain cardiology input to balance antiplatelet interruption duration against stent/ischemic risk"
+          },
+          {
+            "action_id": "notify_bloodbank",
+            "name": "transfer_to_specialist",
+            "arguments": {
+              "summary": "Urgent: Active upper GI bleed with initial transfusion given and Hgb 7.2; request rapid availability of 2-4 units PRBC crossmatched at bedside and readiness for additional products (platelets/FFP) if needed. Type & Screen in chart: 'A negative, antibody screen negative'.",
+              "specialty": "blood bank/transfusion service"
+            },
+            "compare_args": [
+              "specialty"
+            ],
+            "info": "Coordinate blood product preparation and rapid bedside delivery to align with timing of endoscopy"
+          },
+          {
+            "action_id": "decide_disposition",
+            "name": "transfer_to_specialist",
+            "arguments": {
+              "summary": "Recommend ICU admission for ongoing hemodynamic monitoring and frequent Hgb checks if ongoing bleeding, evidence of hemodynamic instability, or need for repeated transfusion; if stable after endoscopy and no further bleeding, consider step-down unit. Patient currently tachycardic and hypotensive on arrival with ongoing transfusion needs.",
+              "specialty": "critical care"
+            },
+            "compare_args": [
+              "specialty"
+            ],
+            "info": "Request critical care support and potential ICU bed for monitoring and rapid escalation"
+          },
+          {
+            "action_id": "record_dx",
+            "name": "record_diagnosis",
+            "arguments": {
+              "patient_id": "P006",
+              "diagnosis": "Acute upper gastrointestinal hemorrhage (likely peptic ulcer / NSAID-related erosive gastritis)",
+              "icd10_code": "K92.0",
+              "confidence": "high"
+            },
+            "compare_args": [
+              "patient_id",
+              "diagnosis"
+            ],
+            "info": "Document working diagnosis and likely etiologies to guide urgent endoscopic planning"
+          }
+        ],
+        "nl_assertions": [
+          "The agent reviewed Dorothy Patterson's chart and identified high-risk features for major upper GI bleeding: Hgb 7.2 g/dL, Hct 21.8%, tachycardia and hypotension on arrival, elevated BUN 42 mg/dL, and lactate 3.2 mmol/L",
+          "The agent noted current medications (daily aspirin and naproxen) and that aspirin and naproxen were held per admission note; the agent recognized NSAID use as a likely precipitant and that aspirin poses a balance of bleeding vs ischemic risk given prior coronary stent",
+          "The agent found an available Type & Screen result ('A negative, antibody screen negative') and instructed blood bank to crossmatch and prepare 2–4 units PRBC stat given ongoing bleeding and possible need for additional transfusion",
+          "The agent recommended immediate repeat stat hemoglobin/hematocrit and serial monitoring (q4–6h or more frequently per clinical status) to assess response to transfusion, while acknowledging newly ordered lab results may not be immediately available",
+          "The agent requested an urgent ECG (stat) to assess for myocardial ischemia prior to/while transfusing given history of CAD and hemodynamic instability",
+          "The agent applied guideline-informed transfusion reasoning: a restrictive transfusion threshold (transfuse for Hgb <7 g/dL) is generally appropriate, but recommended considering a higher transfusion target (e.g., Hgb ~8 g/dL) in the presence of significant cardiovascular disease or ongoing ischemia — and planned to individualize the target after cardiology input and ECG findings",
+          "The agent maintained and supported ongoing IV PPI infusion and coordinated urgent GI endoscopy (EGD) for diagnostic evaluation and possible endoscopic hemostasis, emphasizing synchronization of endoscopy timing with blood product availability",
+          "The agent consulted cardiology to weigh the risks/benefits of withholding aspirin and to provide guidance on earliest safe timing to resume antiplatelet therapy after hemostasis given the patient's history of coronary stenting",
+          "The agent recommended ICU-level monitoring/transfer if bleeding persists, additional transfusions are required, recurrent hypotension occurs, or continuous close titration and monitoring are needed; if stabilized after endoscopy without further bleeding, step-down care may be appropriate",
+          "The agent documented a working diagnosis of acute upper GI hemorrhage (K92.0) and provided a coherent immediate management plan: stat repeat labs and ECG, blood-bank crossmatch/prep for additional PRBCs, continue PPI infusion, urgent GI endoscopy coordination, cardiology consultation regarding aspirin, and escalation to ICU if instability or ongoing transfusion requirements persist"
+        ],
+        "reward_basis": [
+          "ACTION",
+          "NL_ASSERTION"
+        ]
+      }
+    }
+  },
+  {
+    "iteration": 5,
+    "task_id": "spade_clinical_pneumonia_sepsis_p001_v5",
+    "difficulty": "hard",
+    "complexity_score": 26.0,
+    "valid": true,
+    "task": {
+      "id": "spade_clinical_pneumonia_sepsis_p001_v5",
+      "description": {
+        "purpose": "Perform a stepwise assessment and initial management plan for a diabetic patient with suspected bacterial pneumonia and evolving sepsis, integrating allergy constraints into empiric antibiotic selection and coordinating diagnostic testing and consultations.",
+        "difficulty": "hard",
+        "key_challenges": [
+          "Integrate vitals, inflammatory biomarkers (WBC, CRP, procalcitonin), and oxygenation to assess severity and sepsis risk without assuming unavailable imaging results",
+          "Select empiric antibiotic therapy that avoids penicillin (rash) and sulfonamides (anaphylaxis) while accounting for diabetes and need for renal dosing",
+          "Coordinate time-sensitive steps of the sepsis bundle: obtain cultures (note an existing pending blood culture), bloodwork for baseline renal function, and give empiric antibiotics within guideline timeframes while prioritizing cultures before antibiotics if feasible",
+          "Decide appropriate level of care (ward vs ICU) based on respiratory status and risk of deterioration and arrange appropriate consultations (infectious disease, pulmonology, respiratory therapy)",
+          "Ensure glycemic management is addressed in the acute plan given hyperglycemia and chronic diabetes, and plan monitoring for antibiotic dosing adjustments based on BMP results"
+        ]
+      },
+      "user_scenario": {
+        "persona": "Hospitalist/attending physician admitting a patient from the ED",
+        "instructions": "You are the attending physician receiving James Wilson (P001), a 58M with 5 days of productive cough, fever, and worsening dyspnea. Use Healthcare_GYM tools to perform a structured assessment: review the chart, vitals, labs, and clinical note; generate a differential; apply guideline-based recommendations for initial sepsis/CAP management; order appropriate diagnostics (cultures/imaging/basic metabolic panel) and respiratory support orders as indicated; choose an empiric antibiotic regimen that avoids penicillins and sulfonamides given documented allergies; coordinate infectious disease/pulmonology and respiratory therapy consults as needed; recommend disposition (floor vs ICU). Do NOT assume results of newly ordered tests will be immediately available, and do NOT claim a diagnosis is confirmed by imaging or new labs unless those results already exist in the chart."
+      },
+      "ticket": "Patient P001 (James Wilson, 58M) admitted with 5-day history of productive cough, fever, and progressive dyspnea. Allergies: penicillin (rash, moderate) and sulfonamides (anaphylaxis, severe). Current data in chart: febrile (38.7–39.1C), tachypnea, SpO2 91–93% on room air, WBC 15.2 x10^9/L, CRP 85 mg/L (critical), procalcitonin 2.1 ng/mL (high), fasting glucose 165 mg/dL, HbA1c 7.8%. Blood culture is listed as pending in labs. Chest x-ray was noted as pending in the admission note. Need: structured assessment, differential, plan for immediate sepsis/CAP care (cultures, labs, oxygen/respiratory support, empiric antibiotics avoiding penicillins and sulfonamides with rationale and renal-dosing contingency), disposition recommendation, and coordination of specialty consults.",
+      "evaluation_criteria": {
+        "actions": [
+          {
+            "action_id": "review_patient",
+            "name": "get_patient_info",
+            "arguments": {
+              "patient_id": "P001"
+            },
+            "info": "Retrieve demographics, allergies (penicillin and sulfonamides), past medical history (T2DM, HTN, hyperlipidemia), current medications, and admission clinical note describing lung exam and that CXR is pending."
+          },
+          {
+            "action_id": "check_vitals",
+            "name": "get_vital_signs",
+            "arguments": {
+              "patient_id": "P001"
+            },
+            "info": "Obtain recent vital signs to identify fever, tachycardia, tachypnea, and oxygenation (SpO2) trends."
+          },
+          {
+            "action_id": "review_labs",
+            "name": "get_lab_results",
+            "arguments": {
+              "patient_id": "P001"
+            },
+            "info": "Review existing labs (WBC, CRP, procalcitonin, fasting glucose, HbA1c, pending blood culture) and note which results are critical to support bacterial infection/sepsis suspicion."
+          },
+          {
+            "action_id": "review_note",
+            "name": "get_clinical_notes",
+            "arguments": {
+              "patient_id": "P001"
+            },
+            "info": "Read the admission note (Dr. Park) for exam findings (crackles in right lower lobe, decreased breath sounds at right base), symptom timeline, and context about CXR pending and sputum character."
+          },
+          {
+            "action_id": "differential",
+            "name": "get_differential_diagnosis",
+            "arguments": {
+              "symptoms": "fever, productive cough, dyspnea, focal crackles"
+            },
+            "info": "Generate a prioritized differential diagnosis (community-acquired bacterial pneumonia, aspiration pneumonia, viral pneumonia, acute bronchitis, COPD exacerbation less likely) to guide testing and empiric therapy."
+          },
+          {
+            "action_id": "guidelines_cap",
+            "name": "search_clinical_guidelines",
+            "arguments": {
+              "condition": "Community-acquired pneumonia inpatient empiric antibiotic selection and sepsis bundle (blood cultures, empiric antibiotics timing, oxygen/IV fluids)"
+            },
+            "info": "Retrieve guideline recommendations for inpatient CAP management and sepsis initial bundle to guide antibiotic timing, culture collection, oxygen/IV fluid strategies, and admission disposition."
+          },
+          {
+            "action_id": "order_bmp",
+            "name": "order_lab_test",
+            "arguments": {
+              "patient_id": "P001",
+              "test_name": "Basic Metabolic Panel (BMP) — assess renal function and electrolytes for antibiotic dosing",
+              "priority": "stat"
+            },
+            "compare_args": [
+              "patient_id",
+              "test_name",
+              "priority"
+            ],
+            "info": "Order BMP to determine renal function (creatinine) and electrolyte status to inform dosing of chosen empiric antibiotic (renal adjustment if needed). Note that results may not be immediately available."
+          },
+          {
+            "action_id": "order_sputum",
+            "name": "order_lab_test",
+            "arguments": {
+              "patient_id": "P001",
+              "test_name": "Sputum Gram stain and culture with sensitivities",
+              "priority": "stat"
+            },
+            "compare_args": [
+              "patient_id",
+              "test_name"
+            ],
+            "info": "Request sputum specimen for microbiologic diagnosis prior to antibiotics if feasible."
+          },
+          {
+            "action_id": "confirm_blood_cultures",
+            "name": "order_lab_test",
+            "arguments": {
+              "patient_id": "P001",
+              "test_name": "Blood culture (confirm collection/timing relative to antibiotics; order additional set if none documented)",
+              "priority": "stat"
+            },
+            "compare_args": [
+              "patient_id"
+            ],
+            "info": "Ensure blood cultures are obtained prior to antibiotic administration if possible; note existing pending blood culture in the chart and order an additional set only if indicated."
+          },
+          {
+            "action_id": "order_cxr",
+            "name": "order_lab_test",
+            "arguments": {
+              "patient_id": "P001",
+              "test_name": "Chest X-ray (portable AP) — confirm infiltrate and laterality",
+              "priority": "stat"
+            },
+            "compare_args": [
+              "patient_id",
+              "test_name",
+              "priority"
+            ],
+            "info": "Order chest x-ray to document radiographic evidence of pneumonia; do NOT assume results will be available during this task unless present in the chart."
+          },
+          {
+            "action_id": "initial_antibiotic",
+            "name": "record_diagnosis",
+            "arguments": {
+              "patient_id": "P001",
+              "diagnosis": "Suspected community-acquired bacterial pneumonia with systemic inflammatory response (possible sepsis)",
+              "icd10_code": "J18.9",
+              "confidence": "moderate"
+            },
+            "compare_args": [
+              "patient_id",
+              "diagnosis"
+            ],
+            "info": "Document the working diagnosis that justifies empiric therapy and sepsis-bundle actions while acknowledging imaging/lab confirmation pending."
+          },
+          {
+            "action_id": "recommend_antibiotic",
+            "name": "transfer_to_specialist",
+            "arguments": {
+              "summary": "Recommend empiric inpatient antibiotic regimen avoiding penicillins (penicillin allergy - rash) and sulfonamides (anaphylaxis). Propose immediate empiric IV respiratory fluoroquinolone (e.g., levofloxacin or moxifloxacin) monotherapy while awaiting cultures, with dose adjustment based on BMP/Cr. Reserve MRSA/Pseudomonas coverage only if risk factors present or cultures indicate. Start antibiotics promptly after blood cultures obtained.",
+              "specialty": "infectious disease"
+            },
+            "compare_args": [
+              "specialty"
+            ],
+            "info": "Advise Infectious Disease consult for antibiotic stewardship given documented allergies and diabetes; include rationale about selecting a respiratory fluoroquinolone as beta-lactam alternative and planning renal-dose adjustments once BMP available."
+          },
+          {
+            "action_id": "resp_support",
+            "name": "transfer_to_specialist",
+            "arguments": {
+              "summary": "Initiate supplemental oxygen to maintain SpO2 ≥ 92% (nasal cannula or higher as needed). Request Respiratory Therapy for oxygen titration and monitoring and consider pulse oximetry continuous monitoring. If respiratory status worsens (increasing O2 requirement, persistent hypoxemia, or work of breathing), escalate to ICU and consider bronchodilator therapy if wheeze or underlying reactive component.",
+              "specialty": "respiratory therapy"
+            },
+            "compare_args": [
+              "specialty"
+            ],
+            "info": "Coordinate respiratory support and monitoring given SpO2 in low 90s and dyspnea."
+          },
+          {
+            "action_id": "consult_pulm_id",
+            "name": "transfer_to_specialist",
+            "arguments": {
+              "summary": "Request Pulmonology and Infectious Disease involvement for assessment of severity, antibiotic tailoring after culture results, and disposition decision (ICU vs ward). Provide current data: febrile, RR 22–24, SpO2 91–93% RA, WBC 15.2, CRP 85, procalcitonin 2.1, pending blood culture.",
+              "specialty": "pulmonology/infectious disease"
+            },
+            "compare_args": [
+              "specialty"
+            ],
+            "info": "Early specialty input for complex antibiotic selection given allergies and for disposition if respiratory failure or rapid deterioration occurs."
+          },
+          {
+            "action_id": "glycemic_plan",
+            "name": "transfer_to_specialist",
+            "arguments": {
+              "summary": "Address acute glycemic management: monitor fingerstick glucose q4–6h (or more frequently if on steroids or receiving IV fluids with dextrose), correct hyperglycemia per inpatient diabetes protocol (avoid hypoglycemia), and notify primary team/endocrinology if insulin regimen adjustment needed given infection and inpatient antibiotics.",
+              "specialty": "endocrinology/primary team"
+            },
+            "compare_args": [
+              "specialty"
+            ],
+            "info": "Coordinate glycemic control given history of T2DM, fasting glucose 165, and HbA1c 7.8% to avoid hyperglycemia-related complications and to inform dosing/monitoring decisions."
+          },
+          {
+            "action_id": "disposition",
+            "name": "transfer_to_specialist",
+            "arguments": {
+              "summary": "Recommend hospital admission for IV antibiotics and close monitoring. Consider medical ward admission with continuous pulse oximetry if oxygen requirement ≤4 L NC and hemodynamically stable; escalate to ICU if hypoxemia worsens (SpO2 <90% on supplemental O2), increasing work of breathing, or hemodynamic instability.",
+              "specialty": "medical admitting service/critical care"
+            },
+            "compare_args": [
+              "specialty"
+            ],
+            "info": "Provide disposition recommendation and thresholds for escalation to ICU."
+          }
+        ],
+        "nl_assertions": [
+          "The agent identified and cited the patient's documented allergies: penicillin (rash, moderate) and sulfonamides (anaphylaxis, severe), and recognized these constrain empiric antibiotic choices.",
+          "The agent noted critical findings supporting bacterial pneumonia/sepsis risk: fever (38.7–39.1°C), tachypnea (RR 22–24), low-normal SpO2 (91–93% on RA), elevated WBC (15.2 x10^9/L), markedly elevated CRP (85 mg/L), and high procalcitonin (2.1 ng/mL).",
+          "The agent observed that a blood culture is already listed as pending in the chart and instructed to ensure cultures are collected (or an additional set obtained) prior to antibiotic administration if feasible, and to obtain sputum Gram stain/culture prior to antibiotics when possible.",
+          "The agent ordered a stat BMP to assess renal function to guide antibiotic renal dosing and explicitly stated that antibiotic dose adjustments will depend on BMP results (which are not assumed available now).",
+          "The agent recommended empiric inpatient antibiotic therapy that avoids beta-lactam penicillins and sulfonamides — for example, IV respiratory fluoroquinolone monotherapy (e.g., levofloxacin or moxifloxacin) — and justified this choice relative to inpatient CAP guidelines and the patient's allergies; the agent planned renal-dose adjustment pending BMP.",
+          "The agent applied sepsis/CAP bundle reasoning: obtain cultures before antibiotics if it will not meaningfully delay therapy, initiate empiric antibiotics promptly after cultures, start supplemental oxygen and continuous monitoring, and begin IV fluids as clinically indicated while monitoring for signs of sepsis progression.",
+          "The agent recommended coordination with Respiratory Therapy for oxygen titration and monitoring and requested Pulmonology and Infectious Disease consults for severity assessment and antibiotic stewardship given allergy complexity and diabetes.",
+          "The agent included acute glycemic management in the plan (monitoring and inpatient insulin adjustment per protocol) because of the patient's diabetes and hyperglycemia, and linked glycemic control to overall infection management.",
+          "The agent recommended hospital admission for IV antibiotics and monitoring with clear escalation criteria to ICU (worsening hypoxemia, increased work of breathing, or hemodynamic instability), and documented the working diagnosis as suspected community-acquired pneumonia with systemic inflammatory response/sepsis risk without claiming radiographic confirmation since CXR results are pending."
+        ],
+        "reward_basis": [
+          "ACTION",
+          "NL_ASSERTION"
+        ]
+      }
+    }
+  }
+]

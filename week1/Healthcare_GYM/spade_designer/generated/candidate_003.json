@@ -1,0 +1,138 @@
+{
+  "id": "spade_clinical_dka_marcus",
+  "description": {
+    "purpose": "Perform a stepwise assessment and management plan for a patient in diabetic ketoacidosis (DKA) with severe metabolic derangement and hyperkalemia, and coordinate urgent inpatient care and social support for insulin access.",
+    "difficulty": "hard",
+    "key_challenges": [
+      "Integrate arterial blood gas, serum electrolytes, glucose, and ketone results to classify DKA severity and immediate risks",
+      "Manage competing priorities: hyperkalemia (K 5.8 mEq/L) versus need for insulin which will lower potassium",
+      "Choose fluid resuscitation strategy given relative hemodynamic status and risk of cerebral edema is low (adult) but monitor closely",
+      "Decide disposition (ICU vs ward) given altered mental status (GCS 13), severe acidosis (pH 7.18), tachycardia/tachypnea, and ongoing insulin supply issues",
+      "Coordinate urgent monitoring (serial electrolytes), specialty consultations (endocrinology/critical care), and arrange diabetes access support/social work"
+    ]
+  },
+  "user_scenario": {
+    "persona": "Emergency medicine attending preparing handoff and treatment plan for a newly arrived patient with suspected severe DKA",
+    "instructions": "You are the attending physician responsible for Marcus Johnson (P005). Using the Healthcare_GYM tools, perform a structured assessment: review the chart, vitals, and labs; classify DKA severity; decide immediate management steps (IV fluids, insulin strategy, potassium management) consistent with available labs (note K = 5.8 mEq/L already documented); order urgent monitoring tests (repeat BMP/electrolytes, ECG) with appropriate priority; request specialty consults and disposition (ICU vs ward); document the working diagnosis. Do NOT assume results from newly ordered labs will be available unless already present in the chart."
+  },
+  "ticket": "Patient P005 (Marcus Johnson, 24M) type 1 diabetic presenting confused with vomiting and Kussmaul respirations. Labs already show: glucose 542 mg/dL, arterial pH 7.18, bicarbonate 8 mEq/L, anion gap 28, beta-hydroxybutyrate 6.8 mmol/L, potassium 5.8 mEq/L, HbA1c 12.4%. Initiated DKA protocol in clinical note (IV insulin drip, aggressive IVF, K+ monitoring q2h). Needs comprehensive assessment: confirm severity, reconcile potassium management before/when starting insulin, recommend fluid/insulin/potassium monitoring plan, decide level of care, request consults, and address insulin access/social support for ongoing outpatient management planning.",
+  "evaluation_criteria": {
+    "actions": [
+      {
+        "action_id": "review_patient",
+        "name": "get_patient_info",
+        "arguments": {
+          "patient_id": "P005"
+        },
+        "info": "Retrieve demographics, past medical history (T1DM), medications, allergies, and the admission note describing DKA presentation and initiated DKA protocol"
+      },
+      {
+        "action_id": "check_vitals",
+        "name": "get_vital_signs",
+        "arguments": {
+          "patient_id": "P005"
+        },
+        "info": "Obtain current and recent vital signs to assess hemodynamic status, mental status, and respiratory compensation (tachycardia, tachypnea, blood pressure, GCS reported in note)"
+      },
+      {
+        "action_id": "review_labs",
+        "name": "get_lab_results",
+        "arguments": {
+          "patient_id": "P005"
+        },
+        "info": "Review existing labs (glucose, arterial pH, bicarbonate, anion gap, beta-hydroxybutyrate, potassium, HbA1c) to classify severity of DKA and identify immediate risks (e.g., hyperkalemia)"
+      },
+      {
+        "action_id": "guidelines",
+        "name": "search_clinical_guidelines",
+        "arguments": {
+          "condition": "Diabetic ketoacidosis adult management (insulin, fluids, potassium replacement, monitoring, ICU indications)"
+        },
+        "info": "Retrieve guideline-based recommendations for adult DKA management, potassium thresholds for replacement and insulin initiation, fluid resuscitation, and criteria for ICU admission"
+      },
+      {
+        "action_id": "order_ecg",
+        "name": "order_lab_test",
+        "arguments": {
+          "patient_id": "P005",
+          "test_name": "Electrocardiogram (ECG)",
+          "priority": "stat"
+        },
+        "compare_args": [
+          "patient_id",
+          "test_name",
+          "priority"
+        ],
+        "info": "Obtain ECG urgently to evaluate for ECG changes of hyperkalemia (peaked T waves, conduction abnormalities) prior to/while initiating therapy"
+      },
+      {
+        "action_id": "order_repeat_bmp",
+        "name": "order_lab_test",
+        "arguments": {
+          "patient_id": "P005",
+          "test_name": "Basic Metabolic Panel (BMP) — repeat potassium/electrolytes",
+          "priority": "stat"
+        },
+        "compare_args": [
+          "patient_id",
+          "test_name",
+          "priority"
+        ],
+        "info": "Order immediate repeat BMP to verify potassium and renal function and then arrange serial BMPs (q1-2h) as per DKA protocol; note that results may not be immediately available"
+      },
+      {
+        "action_id": "record_dx",
+        "name": "record_diagnosis",
+        "arguments": {
+          "patient_id": "P005",
+          "diagnosis": "Diabetic ketoacidosis (severe)",
+          "icd10_code": "E10.10",
+          "confidence": "high"
+        },
+        "compare_args": [
+          "patient_id",
+          "diagnosis"
+        ],
+        "info": "Document the working diagnosis of severe DKA given pH 7.18, HCO3 8, AG 28, markedly elevated ketones and glucose"
+      },
+      {
+        "action_id": "consult_critical_endocrine",
+        "name": "transfer_to_specialist",
+        "arguments": {
+          "summary": "24M in severe DKA (pH 7.18, HCO3 8, AG 28) with GCS 13 and initial hyperkalemia (K 5.8). Recommend ICU admission for close monitoring, insulin infusion titration, and frequent electrolyte checks; consider endocrine consultation for DKA protocol optimization and diabetes education planning.",
+          "specialty": "critical care/endocrinology"
+        },
+        "compare_args": [
+          "specialty"
+        ],
+        "info": "Request critical care and endocrine involvement to assist with intensive monitoring, insulin/potassium titration, and disposition"
+      },
+      {
+        "action_id": "arrange_social_work",
+        "name": "transfer_to_specialist",
+        "arguments": {
+          "summary": "Patient reports running out of insulin due to cost. Arrange social work and diabetes education referral to address medication access, insurance/assistance programs, and outpatient follow-up planning.",
+          "specialty": "social work/diabetes education"
+        },
+        "compare_args": [
+          "specialty"
+        ],
+        "info": "Coordinate nonmedical support to address insulin access and post-discharge diabetes management"
+      }
+    ],
+    "nl_assertions": [
+      "The agent recognized that Marcus Johnson meets criteria for severe DKA based on documented findings (arterial pH 7.18, serum bicarbonate 8 mEq/L, anion gap 28, beta-hydroxybutyrate 6.8 mmol/L, glucose 542 mg/dL)",
+      "The agent identified hyperkalemia (serum K 5.8 mEq/L) as an immediate consideration and recommended obtaining an ECG to evaluate for hyperkalemic effects prior to or while initiating therapy",
+      "The agent applied guideline-based potassium management: do not give potassium replacement when K is above the replacement threshold (e.g., >5.2–5.5 mEq/L); instead start insulin infusion per DKA protocol while arranging frequent (hourly to q2h) serum potassium monitoring and be prepared to replace potassium if levels fall into the replacement range",
+      "The agent recommended initial fluid resuscitation (e.g., isotonic crystalloid bolus followed by adjusted maintenance/resuscitation rates per DKA guidance) while monitoring hemodynamics and avoiding fluid overload, and described rationale given the patient's vitals and adult status",
+      "The agent recommended initiating/continuing an insulin infusion according to DKA protocols with close bedside monitoring of potassium and glucose (adjusting insulin rate and dextrose infusion as glucose falls), and explicitly linked insulin initiation to the need for serial potassium checks",
+      "The agent recommended ICU-level monitoring/transfer given severe metabolic acidosis, altered mental status (GCS 13), tachycardia and tachypnea, and the need for frequent electrolyte checks and insulin titration",
+      "The agent ordered repeat BMP/electrolytes (stat and serial monitoring) and an ECG (stat) to guide urgent potassium and arrhythmia management, but did not assume results of newly ordered tests would already be available",
+      "The agent recommended involving endocrinology and critical care for protocol oversight and arranged social work/diabetes education to address insulin access and plan outpatient follow-up given the patient's reported lapse in insulin use due to cost"
+    ],
+    "reward_basis": [
+      "ACTION",
+      "NL_ASSERTION"
+    ]
+  }
+}

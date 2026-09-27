@@ -1,0 +1,138 @@
+{
+  "id": "spade_clinical_submassive_pe_p004",
+  "description": {
+    "purpose": "Assess severity and recommend initial and disposition management for a patient with CT-confirmed pulmonary embolism and right ventricular strain",
+    "difficulty": "hard",
+    "key_challenges": [
+      "Integrate imaging (CT-PA) findings with biomarkers (troponin, BNP) and vitals to risk-stratify PE as submassive/intermediate",
+      "Choose initial anticoagulation strategy appropriate for potential need for invasive therapies (e.g., catheter-directed thrombolysis) and for ICU vs ward placement",
+      "Coordinate timely specialist consultations (pulmonary/critical care and interventional radiology) and order baseline labs necessary prior to interventions without relying on newly generated results",
+      "Decide on anticoagulation duration considering provoking factors (recent long flight, OCP use) and underlying thrombophilia (Factor V Leiden heterozygosity)"
+    ]
+  },
+  "user_scenario": {
+    "persona": "Emergency medicine attending evaluating an ED patient with confirmed pulmonary embolism",
+    "instructions": "You are the attending physician caring for Jessica Rivera (P004), who has sudden pleuritic chest pain and dyspnea. CT-PA in the record shows bilateral pulmonary emboli with RV/LV ratio 1.2. Troponin and BNP are elevated; D-dimer is markedly high; patient is tachycardic and mildly hypoxic. Ask the agent to perform a structured assessment: review the chart, risk-stratify the PE (massive vs submassive vs low-risk), recommend immediate management (anticoagulation choice, need for thrombolysis or catheter intervention, level of care), order baseline tests needed before interventions, request specialty consultations, and provide recommendations on contraception (OCP) and anticoagulation duration given Factor V Leiden heterozygosity and provocation history."
+  },
+  "ticket": "Patient P004 (Jessica Rivera, 38F) with CT-PA–confirmed bilateral pulmonary emboli, RV strain (RV/LV 1.2), elevated troponin and BNP, tachycardia and hypoxia. Needs: chart review, risk stratification, immediate management plan (anticoagulation vs thrombolysis/catheter therapy), disposition (ICU vs ward), baseline labs ordered prior to invasive therapy, specialist consults, and long-term anticoagulation duration recommendation considering recent long flight and OCP use plus Factor V Leiden heterozygosity.",
+  "evaluation_criteria": {
+    "actions": [
+      {
+        "action_id": "review_patient",
+        "name": "get_patient_info",
+        "arguments": {
+          "patient_id": "P004"
+        },
+        "info": "Retrieve demographics, allergies, active medications (OCP), past medical history (Factor V Leiden), and clinical note describing CT-PA results"
+      },
+      {
+        "action_id": "check_vitals",
+        "name": "get_vital_signs",
+        "arguments": {
+          "patient_id": "P004"
+        },
+        "info": "Review current vital signs (tachycardia, tachypnea, hypoxia) and trends to assess hemodynamic stability"
+      },
+      {
+        "action_id": "review_labs",
+        "name": "get_lab_results",
+        "arguments": {
+          "patient_id": "P004"
+        },
+        "info": "Review D-dimer, troponin, BNP, ABG values to support evidence of RV strain and gas exchange impairment"
+      },
+      {
+        "action_id": "differential",
+        "name": "get_differential_diagnosis",
+        "arguments": {
+          "symptoms": "pleuritic chest pain, dyspnea, hypoxia"
+        },
+        "info": "Generate differential; confirm PE is the leading diagnosis given CT-PA result and supporting labs"
+      },
+      {
+        "action_id": "guidelines",
+        "name": "search_clinical_guidelines",
+        "arguments": {
+          "condition": "Pulmonary embolism management (risk stratification, anticoagulation, thrombolysis, catheter-directed therapy)"
+        },
+        "info": "Retrieve guideline recommendations for management of submassive (intermediate-risk) PE and criteria for escalation"
+      },
+      {
+        "action_id": "order_coag_and_type",
+        "name": "order_lab_test",
+        "arguments": {
+          "patient_id": "P004",
+          "test_name": "Coagulation panel (PT/INR, aPTT), Type and Screen",
+          "priority": "stat"
+        },
+        "compare_args": [
+          "patient_id",
+          "priority"
+        ],
+        "info": "Order baseline coagulation and blood bank testing prior to anticoagulation or potential thrombolysis/intervention"
+      },
+      {
+        "action_id": "order_venous_duplex",
+        "name": "order_lab_test",
+        "arguments": {
+          "patient_id": "P004",
+          "test_name": "Lower extremity venous duplex ultrasound (to assess for DVT)",
+          "priority": "routine"
+        },
+        "info": "Assess for proximal DVT as source and to inform overall management"
+      },
+      {
+        "action_id": "record_dx",
+        "name": "record_diagnosis",
+        "arguments": {
+          "patient_id": "P004",
+          "diagnosis": "Acute pulmonary embolism with right ventricular strain (submassive/intermediate-risk)",
+          "icd10_code": "I26.99",
+          "confidence": "high"
+        },
+        "compare_args": [
+          "patient_id",
+          "diagnosis"
+        ],
+        "info": "Document working diagnosis with risk descriptor (submassive/intermediate)"
+      },
+      {
+        "action_id": "consult_specialty",
+        "name": "transfer_to_specialist",
+        "arguments": {
+          "summary": "38F with CT-confirmed bilateral PE, RV/LV 1.2, elevated troponin and BNP—intermediate-risk PE requiring consideration of ICU monitoring and evaluation for catheter-directed therapy if deterioration",
+          "specialty": "pulmonary/critical care"
+        },
+        "compare_args": [
+          "specialty"
+        ],
+        "info": "Request urgent pulmonary/critical care consultation for disposition to ICU vs ward and assistance with advanced therapies"
+      },
+      {
+        "action_id": "consult_ir",
+        "name": "transfer_to_specialist",
+        "arguments": {
+          "summary": "38F with submassive PE and RV strain; consult interventional radiology regarding feasibility of catheter-directed thrombolysis if clinical deterioration or if multidisciplinary team recommends escalation",
+          "specialty": "interventional radiology"
+        },
+        "compare_args": [
+          "specialty"
+        ],
+        "info": "Notify interventional radiology early to expedite time-sensitive procedures if indicated"
+      }
+    ],
+    "nl_assertions": [
+      "The agent reviewed and cited the CT-PA confirmation of bilateral PE and RV/LV ratio 1.2 from the clinical note",
+      "The agent identified physiologic evidence of RV strain (elevated troponin and BNP) and clinically classified the patient as intermediate/submassive risk rather than massive",
+      "The agent recommended immediate therapeutic anticoagulation (e.g., unfractionated heparin infusion or weight-based LMWH) as first-line, and explained why systemic thrombolysis is not routinely indicated now but should be considered if hemodynamic deterioration occurs",
+      "The agent ordered baseline coagulation studies and type & screen prior to any invasive or thrombolytic therapy and requested lower-extremity duplex to look for DVT",
+      "The agent recommended ICU-level monitoring (or step-down if ICU unavailable) given RV dysfunction and hypoxemia and requested urgent pulmonary/critical care and interventional radiology consultations",
+      "The agent advised stopping estrogen-containing OCPs and discussed anticoagulation duration: treat as provoked (recent long flight + OCPs) and recommend finite anticoagulation (e.g., 3 months) but incorporate Factor V Leiden heterozygosity into shared decision-making and guideline-based duration planning",
+      "The agent noted there are no documented medication allergies that would contraindicate guideline-recommended anticoagulation"
+    ],
+    "reward_basis": [
+      "ACTION",
+      "NL_ASSERTION"
+    ]
+  }
+}

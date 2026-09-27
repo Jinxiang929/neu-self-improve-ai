@@ -1,0 +1,271 @@
+#!/bin/bash
+# Submit the benchmark evaluation matrix.
+#
+# Every condition in the rebuttal table goes through runs/eval_agentic.slurm with
+# the SAME turn budget, engine, decoding and benchmark list. That uniformity is
+# the point: the submitted paper could not difference its own columns because
+# Base+AR ran largely on sglang while the RL arms ran on transformers (worth
+# 1.0-3.1 pp) and because TT-OPD was scored at 5 turns while base/GRPO used 10.
+# Do not add a per-condition override here without a written reason.
+#
+#   ./launch_evals.sh                 # every checkpoint that has finished training
+#   ./launch_evals.sh q9b_ttopd       # one condition
+#   ./launch_evals.sh base            # the untrained Base+AR reference
+#   PLAN=1 ./launch_evals.sh          # print, submit nothing
+#   BENCH="medqa" ./launch_evals.sh   # narrow the benchmark list (smoke)
+#   SUITE=best ./launch_evals.sh      # the SELECTED step per arm, not the latest
+#                                     # one — see the BEST array below for the rule
+#
+# Base (text) is NOT here: it is a single-turn log-probability condition and runs
+# through scripts/eval_benchmark_logprob.py, not the AgentRunner.
+set -uo pipefail
+
+# Overridable so the harness can run against another checkout or a fixture tree;
+# the default is the layout every run in the paper used.
+RUN_ROOT="${RUN_ROOT:-/data/project/private/minstar/workspace/hcgym_rebuttal}"
+SCRIPT="${RUN_ROOT}/runs/eval_agentic.slurm"
+
+# Six benchmarks, two per domain, chosen to cover every claim the rebuttal makes
+# at roughly a fifth of the cost of all 18 (4,721 items vs ~24,000). Widen with
+# BENCH="..." for the camera-ready.
+#
+#   medqa 1273        the flagship number, quoted in the paper and every review
+#   mmlu 1089         where the agentic-textual transfer gap lives — the paper's
+#                     largest reported degradation, so it cannot be dropped
+#   kqa_golden 201    smallest LFQA; earliest signal
+#   medication_qa 666 the rebuttal's largest LFQA claim (+11.4 pp over base)
+#   vqa_rad 451       the paper's primary visual QA, smallest with images
+#   slake 1061        a second visual QA, so a VQA result is not a single dataset
+#
+# Deliberately excluded: pathvqa (6,719 — dominates wall-clock for no new claim),
+# pmc_vqa (a substitute release, not the official one), mimic_iii/eicu
+# (credentialed PhysioNet, unrecoverable), vqa_med_2021 (ships no images),
+# quilt_vqa (gated; one click at huggingface.co/datasets/wisdomik/Quilt_VQA then
+# `bash restore_data.sh D_quilt`).
+BENCH="${BENCH:-medqa mmlu kqa_golden medication_qa vqa_rad slake}"
+MAX_TURNS="${MAX_TURNS:-5}"
+PLAN="${PLAN:-0}"
+
+# tag | checkpoint or backbone path
+# Trained arms point at the checkpoint dir; autoretry writes them under checkpoints/<exp>.
+Q9B="${RUN_ROOT}/models/Qwen3.5-9B"
+# tag | path | prompt mode
+#
+# The three untrained prompting rows separate the method from the scaffolding: a
+# reasoning-and-acting prompt over the same tool set, and the plain condition given
+# more forceful tool instructions. Neither needs training, so both can run the
+# moment a GPU frees. base_react additionally reports
+# a react_rate — a low score at low adherence means the model ignored the format,
+# which is the opposite conclusion from "ReAct does not help", so read them together.
+CONDITIONS=(
+  "base|${Q9B}|default"
+  "base_strong_tool|${Q9B}|strong_tool"
+  "base_react|${Q9B}|react"
+  # The prompting upper bound: same model, same tools, allowed to read its own
+  # failed attempt and retry. If this reaches the RL arms, the contribution claim
+  # has to be restated — so it runs the full four-strategy ladder, including
+  # LAST_ATTEMPT, which is what separates "reflection helped" from "a second
+  # sample helped". Extra inference cost is reported alongside the score.
+  "base_reflexion|${Q9B}|default"
+  "q4b_grpo|${RUN_ROOT}/checkpoints/q4b_grpo"
+  "q4b_ttopd|${RUN_ROOT}/checkpoints/q4b_ttopd"
+  "q9b_grpo|${RUN_ROOT}/checkpoints/q9b_grpo"
+  "q9b_grpo_cosine|${RUN_ROOT}/checkpoints/q9b_grpo_cosine"
+  "q9b_ttopd|${RUN_ROOT}/checkpoints/q9b_ttopd"
+  "q9b_ttopd_hints|${RUN_ROOT}/checkpoints/q9b_ttopd_hints"
+  "q9b_opsd|${RUN_ROOT}/checkpoints/q9b_opsd"
+  "q27b_grpo|${RUN_ROOT}/checkpoints/q27b_grpo"
+  "q27b_ttopd|${RUN_ROOT}/checkpoints/q27b_ttopd"
+  "q9btxt_grpo|${RUN_ROOT}/checkpoints/q9btxt_grpo"
+  "q9btxt_ttopd|${RUN_ROOT}/checkpoints/q9btxt_ttopd"
+  "glm9b_grpo|${RUN_ROOT}/checkpoints/glm9b_grpo"
+  "glm9b_ttopd|${RUN_ROOT}/checkpoints/glm9b_ttopd"
+)
+
+# ── SUITE=best: evaluate a SELECTED step, not the latest one ──────────────────
+#
+# The entries above name a run root, so resolve_ckpt.sh serves whatever step that
+# run reached last. For a run still training that is what you want. For a number
+# in the table it is not: the step is chosen from the measured validation curve,
+# and the two are far apart -- q9b_grpo peaks at 670 and trains on to 1452,
+# q4b_ttopd peaks at 90 and is BELOW its own step-0 by 980.
+#
+# Selection rule, applied to the val curve reconstructed from every wandb run
+# (val_files is the same 850-row file for all four-modality arms, so the arms are
+# comparable; q9btxt_* validate on the 788-row text-only file and are not):
+#   * peak val-core acc, but only where it sits on a plateau rather than a spike,
+#   * degenerate/mean@1 <= 0.10 -- q9b_grpo hits 0.2847 at steps 670/680/1270/1370
+#     with degeneracy 0.07/0.17/0.30/0.31, and only 670 is a usable model,
+#   * plus each arm's FINAL step, because the gap between peak and final is the
+#     evidence for whether the arm was still improving or already degrading.
+# Read every number against the ceiling: 355/850 = 0.4176 (textonly 293/788 =
+# 0.3718), and against a 2.71pp re-validation spread measured on the base model.
+BEST=(
+  # arm_step                    | path                                                        | mode
+  "q27b_grpo_s180|${RUN_ROOT}/checkpoints/q27b_grpo/global_step_180"
+  "q27b_grpo_s380|${RUN_ROOT}/checkpoints/q27b_grpo/global_step_380"
+  "q9btxt_grpo_s340|${RUN_ROOT}/checkpoints/q9btxt_grpo/global_step_340"
+  "q9b_grpo_s670|${RUN_ROOT}/checkpoints/q9b_grpo/global_step_670"
+  "q4b_grpo_s1370|${RUN_ROOT}/checkpoints/q4b_grpo/global_step_1370"
+  # Step-matched controls for the gold-drop claim. golddrop is 524 steps over
+  # 1,834 gold-complete rows; q4b_grpo is 1,452 steps over all 3,390. Comparing
+  # their best checkpoints confounds "dropped the ungradeable rows" with "trained
+  # a different number of steps on a different LR schedule", so q4b_grpo is also
+  # evaluated at 480 and 520 -- 480 is an exact step match for golddrop's own
+  # peak, and 520 is the closest step to its final 524.
+  "q4b_grpo_s480|${RUN_ROOT}/checkpoints/q4b_grpo/global_step_480"
+  "q4b_grpo_s520|${RUN_ROOT}/checkpoints/q4b_grpo/global_step_520"
+  # The control that decides what the gold-drop result means. Same 1,834 rows,
+  # same 70.6% multiple-choice profile and the same 1,294 MCQA rows as golddrop;
+  # the 540 open-ended rows carry NO ground truth instead of gold. Same 524
+  # steps, 2 epochs, backbone and test.parquet. Evaluated at golddrop's own two
+  # steps so the reading is a straight substitution:
+  #   near golddrop (0.7785 / 0.7800) -> the recovery was an answer-format effect
+  #   near the full split (0.65-0.71) -> gradeability is the cause
+  "q4b_grpo_fmtmatch_s480|${RUN_ROOT}/checkpoints/q4b_grpo_fmtmatch/global_step_480"
+  "q4b_grpo_fmtmatch_s524|${RUN_ROOT}/checkpoints/q4b_grpo_fmtmatch/global_step_524"
+  "q4b_grpo_golddrop_s480|${RUN_ROOT}/checkpoints/q4b_grpo_golddrop/global_step_480"
+  "q4b_grpo_golddrop_s524|${RUN_ROOT}/checkpoints/q4b_grpo_golddrop/global_step_524"
+  # The same contrast on a second backbone, which is the single largest gap in
+  # the 4B result. q9b_grpo already has checkpoints at 480 and 520, so the
+  # gold-drop arm was trained for the same 524 steps on the same gold-complete
+  # split and reads against a step-matched control without any new baseline.
+  "q9b_grpo_golddrop_s480|${RUN_ROOT}/checkpoints/q9b_grpo_golddrop/global_step_480"
+  "q9b_grpo_golddrop_s524|${RUN_ROOT}/checkpoints/q9b_grpo_golddrop/global_step_524"
+  "q9b_grpo_s480|${RUN_ROOT}/checkpoints/q9b_grpo/global_step_480"
+  "q9b_grpo_s520|${RUN_ROOT}/checkpoints/q9b_grpo/global_step_520"
+  # The composite-reward arm, finished 2026-08-08. Its two highest raw scores are
+  # steps 390 and 420 (0.2729), and the gate rejects both -- degeneracy 0.20 and
+  # 0.25. 330 gives up 0.11 pp for a tenfold cleaner output rate (0.02).
+  "q4b_compacc_s330|${RUN_ROOT}/checkpoints/q4b_compacc/global_step_330"
+  "q4b_compacc_s484|${RUN_ROOT}/checkpoints/q4b_compacc/global_step_484"
+  # Controls. q9b_grpo_cosine is the ONLY correct control for a TT-OPD arm --
+  # ARM=ttopd turns on cosine_reward AND distillation, so differencing it against
+  # plain grpo attributes the cosine reward to distillation.
+  "q9b_grpo_cosine_s40|${RUN_ROOT}/checkpoints/q9b_grpo_cosine/global_step_40"
+  "q4b_ttopd_s90|${RUN_ROOT}/checkpoints/q4b_ttopd/global_step_90"
+  "q4b_ttopd_s980|${RUN_ROOT}/checkpoints/q4b_ttopd/global_step_980"
+  "q9btxt_ttopd_s50|${RUN_ROOT}/checkpoints/q9btxt_ttopd/global_step_50"
+  "q9btxt_ttopd_s660|${RUN_ROOT}/checkpoints/q9btxt_ttopd/global_step_660"
+  "q9b_ttopd_s730|${RUN_ROOT}/checkpoints/q9b_ttopd/global_step_730"
+)
+
+SUITE="${SUITE:-latest}"
+case "$SUITE" in
+    latest) ;;
+    best)   CONDITIONS=("${BEST[@]}") ;;
+    *)      echo "[fatal] SUITE must be 'latest' (run roots) or 'best' (selected steps), got '${SUITE}'" >&2
+            exit 1 ;;
+esac
+
+WANT="${1:-all}"
+
+# Decide whether a run has anything worth evaluating. This only INSPECTS — the
+# actual FSDP-shard merge happens inside the job, on a compute node, because
+# merging loads the whole model and must not run on the login node.
+#
+# resolve_ckpt.sh exit codes: 0 = a loadable path exists, 2 = shards present but
+# not merged yet (still worth submitting), anything else = nothing usable.
+checkpoint_status() {
+    "${RUN_ROOT}/runs/resolve_ckpt.sh" "$1" --check >/dev/null 2>&1
+    echo $?
+}
+
+submitted=0
+for entry in "${CONDITIONS[@]}"; do
+    IFS='|' read -r tag path mode <<< "$entry"
+    mode="${mode:-default}"
+    case "$tag" in *reflexion*) reflex=1 ;; *) reflex=0 ;; esac
+    [ "$WANT" = "all" ] || [ "$WANT" = "$tag" ] || continue
+
+    # The base condition points straight at a backbone; trained arms need a
+    # checkpoint that either is already merged or has shards to merge.
+    if [ "${tag#base}" != "$tag" ]; then
+        model="$path"
+        [ -f "${model}/config.json" ] || { echo "[skip] ${tag} — no backbone at ${path}"; continue; }
+    else
+        case "$(checkpoint_status "$path")" in
+            0|2) model="$path" ;;
+            *)   echo "[skip] ${tag} — no checkpoint worth evaluating under ${path}"; continue ;;
+        esac
+    fi
+    if [ -d "${RUN_ROOT}/eval_results/${tag}" ] && \
+       [ -n "$(ls -A "${RUN_ROOT}/eval_results/${tag}" 2>/dev/null)" ]; then
+        echo "[skip] ${tag} — eval_results/${tag} is already populated"
+        continue
+    fi
+    # Fail CLOSED. A broken squeue and an idle squeue both return an empty string,
+    # and this is the only thing standing between a retry and a duplicate 8-hour
+    # GPU job writing the same eval_results/${tag} as the one already queued. So
+    # check the exit status, and refuse to submit when the queue is unreadable.
+    if ! QSTATE="$(squeue -u "${USER:-$(id -un)}" -h -n "hcgym-eval-${tag}" -o %T 2>&1)"; then
+        echo "[skip] ${tag} — cannot read the queue (${QSTATE%%$'\n'*}); refusing to submit rather than risk a duplicate"
+        continue
+    fi
+    if printf '%s' "$QSTATE" | grep -q .; then
+        echo "[skip] ${tag} — already queued or running"
+        continue
+    fi
+
+    if [ "$PLAN" = "1" ]; then
+        echo "[plan] ${tag}  model=${model}  turns=${MAX_TURNS}  prompt_mode=${mode}"
+        submitted=$((submitted + 1))
+        continue
+    fi
+
+    # 27B needs tensor parallelism; everything else fits on one card. The count
+    # goes on the command line AND in EVAL_GPUS because Slurm does not expand
+    # variables inside #SBATCH directives.
+    #
+    # Host RAM is sized for the FSDP merge, not for serving. verl's merger loads
+    # all 7 shards concurrently and then builds bf16 copies before freeing the
+    # fp32 list, so a 27B step needs roughly 102 GiB (fp32 shards) + 51 GiB
+    # (bf16) resident at once -- about 153 GiB against the script's 200 GiB
+    # default. That is arithmetic from the shard sizes, not a measurement, and
+    # the merge has never actually been run in this tree, so give 27B headroom
+    # rather than discover the OOM after a multi-hour load.
+    # 27B runs TP=1 like everything else. It was on TP=4 for capacity, and that
+    # silently produced whitespace: probe job 65960 served the same weights three
+    # ways and got '\n\n' at tp=4 but real text at tp=1 -- and the UNTRAINED
+    # Qwen3.5-27B release gave '\n\n' at tp=4 too, so this is the serving path in
+    # this sglang build, not the checkpoint. It cost two eval jobs that returned
+    # 0.0000 on all six benchmarks and looked like a broken merge.
+    # 27B in bf16 is ~54 GB against a 180 GB card, so one GPU is enough.
+    case "$tag" in
+        q27b_*) gpus=1; mem=360G ;;
+        *)      gpus=1; mem=200G ;;
+    esac
+
+    # The backbone this arm was trained from, used ONLY as a dtype reference for
+    # the FSDP merge. FSDP holds master weights in fp32, so the shards say nothing
+    # about which tensors the architecture wants left in fp32 -- for Qwen3.5 that
+    # is linear_attn.A_log and linear_attn.norm.weight, and getting it wrong kills
+    # sglang in the Mamba conv kernel after the model is already loaded.
+    case "$tag" in
+        q4b_*)   dtype_ref="/data/project/public/checkpoints/Qwen3.5-4B" ;;
+        q9b_*|q9btxt_*) dtype_ref="${RUN_ROOT}/models/Qwen3.5-9B" ;;
+        q27b_*)  dtype_ref="/data/project/public/checkpoints/Qwen3.5-27B" ;;
+        glm9b_*) dtype_ref="${RUN_ROOT}/models/GLM-4-9B-0414" ;;
+        *)       dtype_ref="" ;;
+    esac
+    if [ -n "$dtype_ref" ] && ! ls "${dtype_ref}"/*.safetensors >/dev/null 2>&1; then
+        echo "[skip] ${tag} — dtype reference ${dtype_ref} has no safetensors; a merge here would repeat the bf16 bug"
+        continue
+    fi
+
+    echo "[submit] ${tag}  model=${model}  gpus=${gpus}  mem=${mem}  prompt_mode=${mode}"
+    sbatch -J "hcgym-eval-${tag}" \
+           --gres="gpu:${gpus}" \
+           --mem="${mem}" \
+           --export="ALL,EVAL_GPUS=${gpus},MODEL=${model},TAG=${tag},BENCH=${BENCH},MAX_TURNS=${MAX_TURNS},PROMPT_MODE=${mode},REFLEXION=${reflex},DTYPE_REFERENCE=${dtype_ref}" \
+           "$SCRIPT"
+    submitted=$((submitted + 1))
+    sleep 2
+done
+
+echo
+if [ "$PLAN" = "1" ]; then
+    echo "plan only — ${submitted} eval(s) would submit, nothing sent"
+else
+    echo "${submitted} eval(s) submitted"
+fi

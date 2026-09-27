@@ -1,0 +1,218 @@
+{
+  "id": "spade_clinical_pneumonia_sepsis_p001_v5",
+  "description": {
+    "purpose": "Perform a stepwise assessment and initial management plan for a diabetic patient with suspected bacterial pneumonia and evolving sepsis, integrating allergy constraints into empiric antibiotic selection and coordinating diagnostic testing and consultations.",
+    "difficulty": "hard",
+    "key_challenges": [
+      "Integrate vitals, inflammatory biomarkers (WBC, CRP, procalcitonin), and oxygenation to assess severity and sepsis risk without assuming unavailable imaging results",
+      "Select empiric antibiotic therapy that avoids penicillin (rash) and sulfonamides (anaphylaxis) while accounting for diabetes and need for renal dosing",
+      "Coordinate time-sensitive steps of the sepsis bundle: obtain cultures (note an existing pending blood culture), bloodwork for baseline renal function, and give empiric antibiotics within guideline timeframes while prioritizing cultures before antibiotics if feasible",
+      "Decide appropriate level of care (ward vs ICU) based on respiratory status and risk of deterioration and arrange appropriate consultations (infectious disease, pulmonology, respiratory therapy)",
+      "Ensure glycemic management is addressed in the acute plan given hyperglycemia and chronic diabetes, and plan monitoring for antibiotic dosing adjustments based on BMP results"
+    ]
+  },
+  "user_scenario": {
+    "persona": "Hospitalist/attending physician admitting a patient from the ED",
+    "instructions": "You are the attending physician receiving James Wilson (P001), a 58M with 5 days of productive cough, fever, and worsening dyspnea. Use Healthcare_GYM tools to perform a structured assessment: review the chart, vitals, labs, and clinical note; generate a differential; apply guideline-based recommendations for initial sepsis/CAP management; order appropriate diagnostics (cultures/imaging/basic metabolic panel) and respiratory support orders as indicated; choose an empiric antibiotic regimen that avoids penicillins and sulfonamides given documented allergies; coordinate infectious disease/pulmonology and respiratory therapy consults as needed; recommend disposition (floor vs ICU). Do NOT assume results of newly ordered tests will be immediately available, and do NOT claim a diagnosis is confirmed by imaging or new labs unless those results already exist in the chart."
+  },
+  "ticket": "Patient P001 (James Wilson, 58M) admitted with 5-day history of productive cough, fever, and progressive dyspnea. Allergies: penicillin (rash, moderate) and sulfonamides (anaphylaxis, severe). Current data in chart: febrile (38.7–39.1C), tachypnea, SpO2 91–93% on room air, WBC 15.2 x10^9/L, CRP 85 mg/L (critical), procalcitonin 2.1 ng/mL (high), fasting glucose 165 mg/dL, HbA1c 7.8%. Blood culture is listed as pending in labs. Chest x-ray was noted as pending in the admission note. Need: structured assessment, differential, plan for immediate sepsis/CAP care (cultures, labs, oxygen/respiratory support, empiric antibiotics avoiding penicillins and sulfonamides with rationale and renal-dosing contingency), disposition recommendation, and coordination of specialty consults.",
+  "evaluation_criteria": {
+    "actions": [
+      {
+        "action_id": "review_patient",
+        "name": "get_patient_info",
+        "arguments": {
+          "patient_id": "P001"
+        },
+        "info": "Retrieve demographics, allergies (penicillin and sulfonamides), past medical history (T2DM, HTN, hyperlipidemia), current medications, and admission clinical note describing lung exam and that CXR is pending."
+      },
+      {
+        "action_id": "check_vitals",
+        "name": "get_vital_signs",
+        "arguments": {
+          "patient_id": "P001"
+        },
+        "info": "Obtain recent vital signs to identify fever, tachycardia, tachypnea, and oxygenation (SpO2) trends."
+      },
+      {
+        "action_id": "review_labs",
+        "name": "get_lab_results",
+        "arguments": {
+          "patient_id": "P001"
+        },
+        "info": "Review existing labs (WBC, CRP, procalcitonin, fasting glucose, HbA1c, pending blood culture) and note which results are critical to support bacterial infection/sepsis suspicion."
+      },
+      {
+        "action_id": "review_note",
+        "name": "get_clinical_notes",
+        "arguments": {
+          "patient_id": "P001"
+        },
+        "info": "Read the admission note (Dr. Park) for exam findings (crackles in right lower lobe, decreased breath sounds at right base), symptom timeline, and context about CXR pending and sputum character."
+      },
+      {
+        "action_id": "differential",
+        "name": "get_differential_diagnosis",
+        "arguments": {
+          "symptoms": "fever, productive cough, dyspnea, focal crackles"
+        },
+        "info": "Generate a prioritized differential diagnosis (community-acquired bacterial pneumonia, aspiration pneumonia, viral pneumonia, acute bronchitis, COPD exacerbation less likely) to guide testing and empiric therapy."
+      },
+      {
+        "action_id": "guidelines_cap",
+        "name": "search_clinical_guidelines",
+        "arguments": {
+          "condition": "Community-acquired pneumonia inpatient empiric antibiotic selection and sepsis bundle (blood cultures, empiric antibiotics timing, oxygen/IV fluids)"
+        },
+        "info": "Retrieve guideline recommendations for inpatient CAP management and sepsis initial bundle to guide antibiotic timing, culture collection, oxygen/IV fluid strategies, and admission disposition."
+      },
+      {
+        "action_id": "order_bmp",
+        "name": "order_lab_test",
+        "arguments": {
+          "patient_id": "P001",
+          "test_name": "Basic Metabolic Panel (BMP) — assess renal function and electrolytes for antibiotic dosing",
+          "priority": "stat"
+        },
+        "compare_args": [
+          "patient_id",
+          "test_name",
+          "priority"
+        ],
+        "info": "Order BMP to determine renal function (creatinine) and electrolyte status to inform dosing of chosen empiric antibiotic (renal adjustment if needed). Note that results may not be immediately available."
+      },
+      {
+        "action_id": "order_sputum",
+        "name": "order_lab_test",
+        "arguments": {
+          "patient_id": "P001",
+          "test_name": "Sputum Gram stain and culture with sensitivities",
+          "priority": "stat"
+        },
+        "compare_args": [
+          "patient_id",
+          "test_name"
+        ],
+        "info": "Request sputum specimen for microbiologic diagnosis prior to antibiotics if feasible."
+      },
+      {
+        "action_id": "confirm_blood_cultures",
+        "name": "order_lab_test",
+        "arguments": {
+          "patient_id": "P001",
+          "test_name": "Blood culture (confirm collection/timing relative to antibiotics; order additional set if none documented)",
+          "priority": "stat"
+        },
+        "compare_args": [
+          "patient_id"
+        ],
+        "info": "Ensure blood cultures are obtained prior to antibiotic administration if possible; note existing pending blood culture in the chart and order an additional set only if indicated."
+      },
+      {
+        "action_id": "order_cxr",
+        "name": "order_lab_test",
+        "arguments": {
+          "patient_id": "P001",
+          "test_name": "Chest X-ray (portable AP) — confirm infiltrate and laterality",
+          "priority": "stat"
+        },
+        "compare_args": [
+          "patient_id",
+          "test_name",
+          "priority"
+        ],
+        "info": "Order chest x-ray to document radiographic evidence of pneumonia; do NOT assume results will be available during this task unless present in the chart."
+      },
+      {
+        "action_id": "initial_antibiotic",
+        "name": "record_diagnosis",
+        "arguments": {
+          "patient_id": "P001",
+          "diagnosis": "Suspected community-acquired bacterial pneumonia with systemic inflammatory response (possible sepsis)",
+          "icd10_code": "J18.9",
+          "confidence": "moderate"
+        },
+        "compare_args": [
+          "patient_id",
+          "diagnosis"
+        ],
+        "info": "Document the working diagnosis that justifies empiric therapy and sepsis-bundle actions while acknowledging imaging/lab confirmation pending."
+      },
+      {
+        "action_id": "recommend_antibiotic",
+        "name": "transfer_to_specialist",
+        "arguments": {
+          "summary": "Recommend empiric inpatient antibiotic regimen avoiding penicillins (penicillin allergy - rash) and sulfonamides (anaphylaxis). Propose immediate empiric IV respiratory fluoroquinolone (e.g., levofloxacin or moxifloxacin) monotherapy while awaiting cultures, with dose adjustment based on BMP/Cr. Reserve MRSA/Pseudomonas coverage only if risk factors present or cultures indicate. Start antibiotics promptly after blood cultures obtained.",
+          "specialty": "infectious disease"
+        },
+        "compare_args": [
+          "specialty"
+        ],
+        "info": "Advise Infectious Disease consult for antibiotic stewardship given documented allergies and diabetes; include rationale about selecting a respiratory fluoroquinolone as beta-lactam alternative and planning renal-dose adjustments once BMP available."
+      },
+      {
+        "action_id": "resp_support",
+        "name": "transfer_to_specialist",
+        "arguments": {
+          "summary": "Initiate supplemental oxygen to maintain SpO2 ≥ 92% (nasal cannula or higher as needed). Request Respiratory Therapy for oxygen titration and monitoring and consider pulse oximetry continuous monitoring. If respiratory status worsens (increasing O2 requirement, persistent hypoxemia, or work of breathing), escalate to ICU and consider bronchodilator therapy if wheeze or underlying reactive component.",
+          "specialty": "respiratory therapy"
+        },
+        "compare_args": [
+          "specialty"
+        ],
+        "info": "Coordinate respiratory support and monitoring given SpO2 in low 90s and dyspnea."
+      },
+      {
+        "action_id": "consult_pulm_id",
+        "name": "transfer_to_specialist",
+        "arguments": {
+          "summary": "Request Pulmonology and Infectious Disease involvement for assessment of severity, antibiotic tailoring after culture results, and disposition decision (ICU vs ward). Provide current data: febrile, RR 22–24, SpO2 91–93% RA, WBC 15.2, CRP 85, procalcitonin 2.1, pending blood culture.",
+          "specialty": "pulmonology/infectious disease"
+        },
+        "compare_args": [
+          "specialty"
+        ],
+        "info": "Early specialty input for complex antibiotic selection given allergies and for disposition if respiratory failure or rapid deterioration occurs."
+      },
+      {
+        "action_id": "glycemic_plan",
+        "name": "transfer_to_specialist",
+        "arguments": {
+          "summary": "Address acute glycemic management: monitor fingerstick glucose q4–6h (or more frequently if on steroids or receiving IV fluids with dextrose), correct hyperglycemia per inpatient diabetes protocol (avoid hypoglycemia), and notify primary team/endocrinology if insulin regimen adjustment needed given infection and inpatient antibiotics.",
+          "specialty": "endocrinology/primary team"
+        },
+        "compare_args": [
+          "specialty"
+        ],
+        "info": "Coordinate glycemic control given history of T2DM, fasting glucose 165, and HbA1c 7.8% to avoid hyperglycemia-related complications and to inform dosing/monitoring decisions."
+      },
+      {
+        "action_id": "disposition",
+        "name": "transfer_to_specialist",
+        "arguments": {
+          "summary": "Recommend hospital admission for IV antibiotics and close monitoring. Consider medical ward admission with continuous pulse oximetry if oxygen requirement ≤4 L NC and hemodynamically stable; escalate to ICU if hypoxemia worsens (SpO2 <90% on supplemental O2), increasing work of breathing, or hemodynamic instability.",
+          "specialty": "medical admitting service/critical care"
+        },
+        "compare_args": [
+          "specialty"
+        ],
+        "info": "Provide disposition recommendation and thresholds for escalation to ICU."
+      }
+    ],
+    "nl_assertions": [
+      "The agent identified and cited the patient's documented allergies: penicillin (rash, moderate) and sulfonamides (anaphylaxis, severe), and recognized these constrain empiric antibiotic choices.",
+      "The agent noted critical findings supporting bacterial pneumonia/sepsis risk: fever (38.7–39.1°C), tachypnea (RR 22–24), low-normal SpO2 (91–93% on RA), elevated WBC (15.2 x10^9/L), markedly elevated CRP (85 mg/L), and high procalcitonin (2.1 ng/mL).",
+      "The agent observed that a blood culture is already listed as pending in the chart and instructed to ensure cultures are collected (or an additional set obtained) prior to antibiotic administration if feasible, and to obtain sputum Gram stain/culture prior to antibiotics when possible.",
+      "The agent ordered a stat BMP to assess renal function to guide antibiotic renal dosing and explicitly stated that antibiotic dose adjustments will depend on BMP results (which are not assumed available now).",
+      "The agent recommended empiric inpatient antibiotic therapy that avoids beta-lactam penicillins and sulfonamides — for example, IV respiratory fluoroquinolone monotherapy (e.g., levofloxacin or moxifloxacin) — and justified this choice relative to inpatient CAP guidelines and the patient's allergies; the agent planned renal-dose adjustment pending BMP.",
+      "The agent applied sepsis/CAP bundle reasoning: obtain cultures before antibiotics if it will not meaningfully delay therapy, initiate empiric antibiotics promptly after cultures, start supplemental oxygen and continuous monitoring, and begin IV fluids as clinically indicated while monitoring for signs of sepsis progression.",
+      "The agent recommended coordination with Respiratory Therapy for oxygen titration and monitoring and requested Pulmonology and Infectious Disease consults for severity assessment and antibiotic stewardship given allergy complexity and diabetes.",
+      "The agent included acute glycemic management in the plan (monitoring and inpatient insulin adjustment per protocol) because of the patient's diabetes and hyperglycemia, and linked glycemic control to overall infection management.",
+      "The agent recommended hospital admission for IV antibiotics and monitoring with clear escalation criteria to ICU (worsening hypoxemia, increased work of breathing, or hemodynamic instability), and documented the working diagnosis as suspected community-acquired pneumonia with systemic inflammatory response/sepsis risk without claiming radiographic confirmation since CXR results are pending."
+    ],
+    "reward_basis": [
+      "ACTION",
+      "NL_ASSERTION"
+    ]
+  }
+}
