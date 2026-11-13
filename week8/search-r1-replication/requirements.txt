@@ -1,0 +1,4 @@
+torch 
+transformers
+modal
+peft==0.21.2

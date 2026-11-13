@@ -1,0 +1,39 @@
+import subprocess
+import sys
+from pathlib import Path
+
+import modal
+
+from modal_common import image, retrieval_server, volume
+
+
+app = modal.App("search-r1-ppo-check")
+source_dir = Path(__file__).parent
+
+image = image.add_local_python_source("modal_common")
+for filename in (
+    "train_ppo.py",
+    "ppo.py",
+    "lora_policy.py",
+    "retriever.py",
+    "reward.py",
+    "rollout.py",
+    "trajectory.py",
+):
+    image = image.add_local_file(source_dir / filename, f"/app/{filename}")
+
+
+@app.function(
+    image=image, gpu="L4", cpu=4, memory=96 * 1024,
+    timeout=1800, volumes={"/data": volume},
+)
+def run_ppo() -> None:
+    with retrieval_server():
+        subprocess.run([sys.executable, "-u", "/app/train_ppo.py"], check=True)
+        volume.commit()
+        print("PPO checkpoint committed to Modal Volume.", flush=True)
+
+
+@app.local_entrypoint()
+def main() -> None:
+    run_ppo.remote()
